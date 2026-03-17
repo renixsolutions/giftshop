@@ -1,0 +1,174 @@
+<%- include('../partials/header-gift') %>
+<%- include('../partials/navbar-gift', { currentPage: 'home', cartCount: typeof cartCount !== 'undefined' ? cartCount : 0, userId: typeof userId !== 'undefined' ? userId : null }) %>
+
+<div class="hero">
+  <video class="hero-video" autoplay muted loop playsinline>
+    <source src="/video/135875-764362174.mp4" type="video/mp4">
+  </video>
+  <div class="hero-inner">
+  <div>
+    <div class="hero-eyebrow"><span>✦</span> Curated Luxury Gift Experiences</div>
+    <h1>Gifts That <i>Speak</i><br>From the Heart</h1>
+    <p class="hero-sub">Bespoke hampers and luxury gift boxes, handcrafted for every moment that matters. Build your own or choose from our curated collections.</p>
+    <div class="hero-actions">
+      <a href="/build-hamper" class="btn-solid">Build Your Hamper →</a>
+      <a href="/catalog" class="btn-ghost">Explore Collection</a>
+    </div>
+    <div class="hero-trust">
+      <div class="trust-item"><div class="trust-val">12K+</div><div class="trust-lbl">Happy customers</div></div>
+      <div class="trust-item"><div class="trust-val">200+</div><div class="trust-lbl">Gift box designs</div></div>
+      <div class="trust-item"><div class="trust-val">4.9★</div><div class="trust-lbl">Average rating</div></div>
+      <div class="trust-item"><div class="trust-val">Same Day</div><div class="trust-lbl">Pan India delivery</div></div>
+    </div>
+  </div>
+  <div class="hero-mosaic">
+    <div class="mosaic-card mc-main">
+      <div class="mc-icon-big">🎁</div>
+      <div class="mc-main-txt">
+        <h3>Build Your Own Hamper</h3>
+        <p>Choose your box, pick your goodies, add a heartfelt message. We'll pack it beautifully.</p>
+      </div>
+      <a href="/build-hamper" class="mc-main-btn">Start Now →</a>
+    </div>
+    <div class="mosaic-card mc-sm"><div class="mc-sm-icon">🍫</div><div class="mc-sm-n">50+</div><div class="mc-sm-l">Gourmet Items</div></div>
+    <div class="mosaic-card mc-sm"><div class="mc-sm-icon">📦</div><div class="mc-sm-n">4</div><div class="mc-sm-l">Box Styles</div></div>
+  </div>
+  </div>
+</div>
+
+<div class="marquee-bar">
+  <span class="marquee-inner">
+    ✦ FREE DELIVERY ON ORDERS ABOVE ₹999 <span class="marquee-sep">◆</span> SAME DAY DISPATCH BEFORE 2PM <span class="marquee-sep">◆</span> CUSTOM CORPORATE GIFTING <span class="marquee-sep">◆</span> PERSONALISED GIFT MESSAGES <span class="marquee-sep">◆</span> PREMIUM PACKAGING GUARANTEED <span class="marquee-sep">◆</span>
+    ✦ FREE DELIVERY ON ORDERS ABOVE ₹999 <span class="marquee-sep">◆</span> SAME DAY DISPATCH BEFORE 2PM <span class="marquee-sep">◆</span> CUSTOM CORPORATE GIFTING <span class="marquee-sep">◆</span> PERSONALISED GIFT MESSAGES <span class="marquee-sep">◆</span> PREMIUM PACKAGING GUARANTEED <span class="marquee-sep">◆</span>
+  </span>
+</div>
+
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-tag">Shop by Category</div>
+    <div class="sec-title">Everything for Every Moment</div>
+  </div>
+  <div class="cat-strip">
+    <% if (typeof categories !== 'undefined' && categories.length) { %>
+      <% categories.forEach(function(cat, i) { %>
+      <a href="/catalog?category=<%= cat.slug || cat.name %>" class="cat-card">
+        <div class="cat-icon-wrap"><%= ['🍫','☕','🕯️','💄','🧸','🌸'][i % 6] %></div>
+        <div class="cat-lbl"><%= cat.name %></div>
+        <div class="cat-count"><%= cat.product_count || 0 %> items</div>
+      </a>
+      <% }); %>
+    <% } else { %>
+      <a href="/catalog" class="cat-card"><div class="cat-icon-wrap">🍫</div><div class="cat-lbl">Chocolates</div><div class="cat-count">Shop</div></a>
+      <a href="/catalog" class="cat-card"><div class="cat-icon-wrap">☕</div><div class="cat-lbl">Mugs & Drinkware</div><div class="cat-count">Shop</div></a>
+      <a href="/catalog" class="cat-card"><div class="cat-icon-wrap">🕯️</div><div class="cat-lbl">Candles & Aroma</div><div class="cat-count">Shop</div></a>
+      <a href="/catalog" class="cat-card"><div class="cat-icon-wrap">💄</div><div class="cat-lbl">Beauty & Skincare</div><div class="cat-count">Shop</div></a>
+      <a href="/catalog" class="cat-card"><div class="cat-icon-wrap">🧸</div><div class="cat-lbl">Soft Toys</div><div class="cat-count">Shop</div></a>
+      <a href="/catalog" class="cat-card"><div class="cat-icon-wrap">🌸</div><div class="cat-lbl">Florals</div><div class="cat-count">Shop</div></a>
+    <% } %>
+  </div>
+</div>
+
+<div class="section" style="padding-top:0;">
+  <div class="sec-head sec-head-row">
+    <div><div class="sec-tag">Trending Now</div><div class="sec-title">Best-Selling Gift Boxes</div></div>
+    <a href="/collections" class="see-all">See all products →</a>
+  </div>
+  <div class="occ-tabs">
+    <a href="/occasions" class="occ-pill occ-pill--primary" style="text-decoration:none;color:inherit;">All Occasions</a>
+    <% if (typeof occasions !== 'undefined' && occasions && occasions.length) { %>
+      <% occasions.slice(0,6).forEach(function(occ){ %>
+        <a href="/occasions?occ=<%= occ.slug %>" class="occ-pill" style="text-decoration:none;color:inherit;">
+          <%= occ.name %>
+        </a>
+      <% }); %>
+    <% } else { %>
+      <a href="/occasions?occ=birthday" class="occ-pill" style="text-decoration:none;color:inherit;">Birthday 🎂</a>
+      <a href="/occasions?occ=anniversary" class="occ-pill" style="text-decoration:none;color:inherit;">Anniversary 💕</a>
+      <a href="/occasions?occ=corporate" class="occ-pill" style="text-decoration:none;color:inherit;">Corporate 💼</a>
+    <% } %>
+  </div>
+  <div class="pgrid">
+    <% if (typeof products !== 'undefined' && products.length) { %>
+      <% products.slice(0, 4).forEach(function(p) { %>
+    <a href="/products/<%= p.id %>" class="pcard">
+      <div class="pcard-img" style="background:#FBF0E8;">
+        <% if (p.image) { %><img src="/uploads/<%= p.image %>" alt="" style="width:100%;height:100%;object-fit:cover;"><% } else { %>🎁<% } %>
+      </div>
+      <div class="pcard-body">
+        <div class="pcard-cat"><%= p.category || 'Gift' %></div>
+        <div class="pcard-name"><%= p.title %></div>
+        <div class="pcard-desc"><%= (p.description || '').substring(0, 80) %>...</div>
+        <div class="pcard-foot">
+          <span class="pcard-price">₹<%= Number(p.price).toLocaleString('en-IN') %></span>
+          <span class="pcard-add">+</span>
+        </div>
+      </div>
+    </a>
+      <% }); %>
+    <% } else { %>
+    <a href="/catalog" class="pcard"><div class="pcard-img" style="background:#FBF0E8;">🎁</div><div class="pcard-body"><div class="pcard-cat">Birthday</div><div class="pcard-name">Bliss Birthday Hamper</div><div class="pcard-foot"><span class="pcard-price">₹1,299</span><span class="pcard-add">+</span></div></div></a>
+    <a href="/catalog" class="pcard"><div class="pcard-img" style="background:#F9EEF6;">🌹</div><div class="pcard-body"><div class="pcard-cat">Anniversary</div><div class="pcard-name">Rose Romance Box</div><div class="pcard-foot"><span class="pcard-price">₹2,499</span><span class="pcard-add">+</span></div></div></a>
+    <a href="/catalog" class="pcard"><div class="pcard-img" style="background:#F0F7EC;">🧁</div><div class="pcard-body"><div class="pcard-cat">All Occasions</div><div class="pcard-name">Gourmet Indulgence Box</div><div class="pcard-foot"><span class="pcard-price">₹1,799</span><span class="pcard-add">+</span></div></div></a>
+    <a href="/build-hamper" class="pcard"><div class="pcard-img" style="background:#EDF3FC;">🌟</div><div class="pcard-body"><div class="pcard-cat">Custom</div><div class="pcard-name">Build Your Own Hamper</div><div class="pcard-foot"><span class="pcard-price">From ₹499</span><span class="pcard-add">+</span></div></div></a>
+    <% } %>
+  </div>
+</div>
+
+<div class="build-band">
+  <div class="build-band-l">
+    <div class="build-eyebrow">✦ OUR SIGNATURE EXPERIENCE</div>
+    <h2>Create Your <i>Dream</i><br>Hamper, Your Way</h2>
+    <p>Every great gift starts with intent. Choose the box, pick the contents, add your personal touch — and we handle the rest, beautifully.</p>
+    <div class="build-steps-list">
+      <div class="bstep"><span class="bstep-n">1</span><span class="bstep-t">Choose your packaging — wooden, acrylic, basket or luxury hamper</span></div>
+      <div class="bstep"><span class="bstep-n">2</span><span class="bstep-t">Add items from chocolates, toys, mugs, cards & more</span></div>
+      <div class="bstep"><span class="bstep-n">3</span><span class="bstep-t">Add a personal message or upload a custom photo card</span></div>
+      <div class="bstep"><span class="bstep-n">4</span><span class="bstep-t">We pack & deliver it — perfectly wrapped, on time</span></div>
+    </div>
+    <a href="/build-hamper" class="btn-solid" style="margin-top:4px;">Start Building Your Hamper →</a>
+  </div>
+  <div class="build-band-r">
+    <div class="box-preview-card">
+      <div class="box-preview-title">Your Custom Hamper Preview</div>
+      <div class="box-items-wrap">
+        <div class="bxi"><div class="bxi-icon">📦</div><div class="bxi-name">Wooden Box</div><div class="bxi-price">₹499</div></div>
+        <div class="bxi"><div class="bxi-icon">🍫</div><div class="bxi-name">Ferrero Rocher</div><div class="bxi-price">₹299</div></div>
+        <div class="bxi"><div class="bxi-icon">☕</div><div class="bxi-name">Ceramic Mug</div><div class="bxi-price">₹249</div></div>
+        <div class="bxi empty"><div class="bxi-icon">+</div><div class="bxi-name">Add item...</div></div>
+      </div>
+      <div class="box-total-row"><span class="box-total-lbl">Starting from</span><span class="box-total-price">₹1,047</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="testi-section">
+  <div class="sec-head" style="text-align:center;">
+    <div class="sec-tag">What People Say</div>
+    <div class="sec-title">Gifting Stories from Our Customers</div>
+    <div class="sec-sub">Real experiences from real people who made someone's day extra special</div>
+  </div>
+  <div class="tgrid">
+    <div class="tcard"><div class="t-stars"><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span></div><div class="t-quote">"Built a custom hamper for my mum's birthday — the wooden box arrived so beautifully wrapped, she cried happy tears. Absolutely extraordinary service."</div><div class="t-author"><div class="t-av">P</div><div><div class="t-name">Priya Sharma</div><div class="t-city">Mumbai · Birthday Hamper</div></div></div></div>
+    <div class="tcard"><div class="t-stars"><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span></div><div class="t-quote">"Ordered 50 corporate hampers for our annual gala. Every single one was perfect, packed with care. GiftHouse is now our go-to for company gifting."</div><div class="t-author"><div class="t-av">R</div><div><div class="t-name">Rahul Mehta</div><div class="t-city">Delhi · Corporate Order</div></div></div></div>
+    <div class="tcard"><div class="t-stars"><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span></div><div class="t-quote">"The personalised photo card with the acrylic box was *chef's kiss*. My partner couldn't believe I put it together myself — it looked so professional."</div><div class="t-author"><div class="t-av">A</div><div><div class="t-name">Ananya Iyer</div><div class="t-city">Bangalore · Anniversary Box</div></div></div></div>
+  </div>
+</div>
+
+<div class="nl-section">
+  <div class="nl-l">
+    <h2>Stay in the loop<br>on gifting inspiration</h2>
+    <p>New collections, seasonal offers and gifting ideas — straight to your inbox.</p>
+  </div>
+  <div>
+    <form action="/newsletter" method="post" class="nl-form" style="display:flex;gap:10px;">
+      <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+      <input type="email" name="email" class="nl-input" placeholder="your@email.com" required>
+      <button type="submit" class="btn-solid">Subscribe</button>
+    </form>
+    <div style="font-size:12px;color:var(--faint);margin-top:10px;">No spam. Unsubscribe anytime.</div>
+  </div>
+</div>
+
+<%- include('../partials/footer-gift') %>
+</body>
+</html>

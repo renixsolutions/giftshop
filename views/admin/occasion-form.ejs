@@ -1,0 +1,69 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout">
+  <%- include('../partials/admin-sidebar', { currentPage: 'occasions' }) %>
+
+  <div class="admin-main">
+    <%- include('../partials/admin-header', { pageTitle: occasion ? 'Edit Occasion' : 'Add Occasion' }) %>
+
+    <div class="admin-content">
+      <% if (typeof flash !== 'undefined' && flash) { %>
+        <div class="alert alert-<%= flash.type === 'error' ? 'danger' : 'success' %> alert-dismissible fade show" role="alert">
+          <%= flash.message %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <% } %>
+
+      <div class="admin-card">
+        <h4 class="mb-4">
+          <i class="bi bi-calendar-heart"></i>
+          <%= occasion ? 'Edit Occasion' : 'Add Occasion' %>
+        </h4>
+
+        <form action="<%= occasion ? `/admin/occasions/${occasion.id}` : '/admin/occasions' %>" method="POST">
+          <%- include('../partials/csrf-token') %>
+          <div class="row">
+            <div class="col-md-8">
+              <div class="mb-3">
+                <label class="form-label">Occasion Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="name" required
+                       value="<%= occasion ? occasion.name : '' %>" placeholder="e.g. Birthday, Anniversary, Diwali">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" name="description" rows="4"
+                          placeholder="Short description for this occasion (optional)"><%= occasion ? (occasion.description || '') : '' %></textarea>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Sort Order</label>
+                <input type="number" class="form-control" name="sort_order"
+                       value="<%= occasion ? (occasion.sort_order || 0) : 0 %>">
+                <small class="text-muted">Lower numbers appear first.</small>
+              </div>
+              <div class="mb-4">
+                <label class="form-label d-block">Status</label>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="true"
+                         <%= !occasion || occasion.is_active ? 'checked' : '' %>>
+                  <label class="form-check-label" for="is_active">Active</label>
+                </div>
+              </div>
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-check-circle"></i> Save Occasion
+                </button>
+                <a href="/admin/occasions" class="btn btn-outline-secondary">Cancel</a>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+

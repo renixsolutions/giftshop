@@ -1,0 +1,939 @@
+<!-- Advanced Filters Panel -->
+<div class="filters-panel" id="filtersPanel">
+    <div class="filters-header">
+        <h5 class="mb-0"><i class="bi bi-funnel"></i> Filters</h5>
+        <button class="btn-close-filters d-md-none" id="closeFiltersBtn">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    
+    <div class="filters-content">
+        <!-- Price Range Filter -->
+        <div class="filter-section">
+            <h6 class="filter-title"><i class="bi bi-currency-rupee"></i> Price Range</h6>
+            <div class="price-range-container">
+                <div class="price-range-display mb-3">
+                    <div class="price-display-item">
+                        <label class="small text-muted">Min</label>
+                        <div class="price-value" id="minPriceDisplay">₹<%= typeof priceRange !== 'undefined' ? priceRange.min : 0 %></div>
+                    </div>
+                    <div class="price-display-item">
+                        <label class="small text-muted">Max</label>
+                        <div class="price-value" id="maxPriceDisplay">₹<%= typeof priceRange !== 'undefined' ? priceRange.max : 10000 %></div>
+                    </div>
+                </div>
+                <div class="dual-range-slider">
+                    <div class="range-track"></div>
+                    <input type="range" class="range-input range-input-min" id="minPriceRange" 
+                           min="<%= typeof priceRange !== 'undefined' ? priceRange.min : 0 %>" 
+                           max="<%= typeof priceRange !== 'undefined' ? priceRange.max : 10000 %>" 
+                           value="<%= typeof minPrice !== 'undefined' && minPrice ? minPrice : (typeof priceRange !== 'undefined' ? priceRange.min : 0) %>"
+                           step="100">
+                    <input type="range" class="range-input range-input-max" id="maxPriceRange" 
+                           min="<%= typeof priceRange !== 'undefined' ? priceRange.min : 0 %>" 
+                           max="<%= typeof priceRange !== 'undefined' ? priceRange.max : 10000 %>" 
+                           value="<%= typeof maxPrice !== 'undefined' && maxPrice ? maxPrice : (typeof priceRange !== 'undefined' ? priceRange.max : 10000) %>"
+                           step="100">
+                    <div class="range-progress"></div>
+                </div>
+                <!-- Hidden inputs for form submission -->
+                <input type="hidden" id="minPrice" value="<%= typeof minPrice !== 'undefined' && minPrice ? minPrice : '' %>">
+                <input type="hidden" id="maxPrice" value="<%= typeof maxPrice !== 'undefined' && maxPrice ? maxPrice : '' %>">
+            </div>
+        </div>
+        
+        <!-- Category Filter -->
+        <div class="filter-section">
+            <h6 class="filter-title"><i class="bi bi-tags"></i> Categories</h6>
+            <% 
+            // Parse selected categories from query string (can be array or single value)
+            let selectedCategories = [];
+            if (typeof selectedCategory !== 'undefined') {
+                if (Array.isArray(selectedCategory)) {
+                    selectedCategories = selectedCategory;
+                } else if (selectedCategory && selectedCategory !== 'all') {
+                    selectedCategories = [selectedCategory];
+                }
+            }
+            // Also check URL params for multiple categories
+            if (typeof req !== 'undefined' && req.query && req.query.categories) {
+                const urlCategories = Array.isArray(req.query.categories) ? req.query.categories : [req.query.categories];
+                selectedCategories = urlCategories;
+            }
+            %>
+            <% if (typeof categories !== 'undefined' && categories && categories.length > 0) { %>
+                <select class="form-select form-select-sm" id="categorySelect" name="categories[]" multiple>
+                    <% categories.forEach(cat => { %>
+                        <option value="<%= cat %>" <%= selectedCategories.includes(cat) ? 'selected' : '' %>><%= cat %></option>
+                    <% }); %>
+                </select>
+            <% } else { %>
+                <div class="text-muted small p-2">
+                    <i class="bi bi-info-circle"></i> No categories available
+                </div>
+            <% } %>
+        </div>
+        
+        <!-- Sort Filter -->
+        <div class="filter-section">
+            <h6 class="filter-title"><i class="bi bi-sort-down"></i> Sort By</h6>
+            <select class="form-select form-select-sm" id="sortBy">
+                <option value="title" <%= typeof sortBy !== 'undefined' && sortBy === 'title' ? 'selected' : '' %>>Name (A-Z)</option>
+                <option value="price" <%= typeof sortBy !== 'undefined' && sortBy === 'price' ? 'selected' : '' %>>Price (Low to High)</option>
+                <option value="price_desc" <%= typeof sortBy !== 'undefined' && sortBy === 'price' && sortOrder === 'desc' ? 'selected' : '' %>>Price (High to Low)</option>
+                <option value="created_at" <%= typeof sortBy !== 'undefined' && sortBy === 'created_at' ? 'selected' : '' %>>Newest First</option>
+            </select>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="filter-actions">
+            <button class="btn btn-primary w-100 mb-2" id="applyFiltersBtn" style="background: linear-gradient(135deg, var(--veera-black) 0%, var(--veera-dark) 100%); border: none; padding: 0.875rem;">
+                <i class="bi bi-check-lg"></i> Apply Filters
+            </button>
+            <button class="btn btn-outline-secondary w-100" id="clearFiltersBtn" style="padding: 0.875rem;">
+                <i class="bi bi-x-circle"></i> Clear All
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Toggle Button (Mobile) -->
+<button class="btn-filter-toggle d-md-none" id="toggleFiltersBtn">
+    <i class="bi bi-funnel"></i> Filters
+</button>
+
+<style>
+    .filters-panel {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        position: sticky;
+        top: 100px;
+        z-index: 100;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+        scrollbar-width: none; /* Firefox */
+    }
+    .filters-panel::-webkit-scrollbar{
+        width:0;
+        height:0;
+    }
+    
+    .filters-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .filters-header h5 {
+        font-weight: 600;
+        color: var(--veera-text);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .filters-header h5 i {
+        font-size: 1.1rem;
+    }
+    
+    .btn-close-filters {
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        color: #666;
+        cursor: pointer;
+        padding: 0.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+    
+    .btn-close-filters:hover {
+        background: rgba(0,0,0,0.05);
+    }
+    
+    .filter-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .filter-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--veera-text);
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .filter-title i {
+        font-size: 1rem;
+    }
+    
+    .price-range-container {
+        padding: 1rem 0;
+    }
+    
+    .price-range-display {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .price-display-item {
+        flex: 1;
+        text-align: center;
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .price-display-item label {
+        display: block;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+    }
+    
+    .price-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--veera-accent-dark);
+    }
+    
+    .dual-range-slider {
+        position: relative;
+        height: 50px;
+        margin: 1rem 0;
+    }
+    
+    .range-track {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: #e0e0e0;
+        border-radius: 2px;
+        transform: translateY(-50%);
+    }
+    
+    .range-progress {
+        position: absolute;
+        top: 50%;
+        height: 4px;
+        background: linear-gradient(135deg, var(--veera-accent) 0%, var(--veera-accent-dark) 100%);
+        border-radius: 2px;
+        transform: translateY(-50%);
+        pointer-events: none;
+        transition: all 0.1s ease;
+    }
+    
+    .range-input {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        margin: 0;
+        transform: translateY(-50%);
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        pointer-events: none;
+        z-index: 2;
+    }
+    
+    .range-input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: white;
+        border: 3px solid var(--veera-accent-dark);
+        border-radius: 50%;
+        cursor: pointer;
+        pointer-events: all;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        transition: all 0.2s ease;
+    }
+    
+    .range-input::-webkit-slider-thumb:hover {
+        transform: scale(1.1);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+    }
+    
+    .range-input::-webkit-slider-thumb:active {
+        transform: scale(1.15);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+    
+    .range-input::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        background: white;
+        border: 3px solid var(--veera-accent-dark);
+        border-radius: 50%;
+        cursor: pointer;
+        pointer-events: all;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        transition: all 0.2s ease;
+    }
+    
+    .range-input::-moz-range-thumb:hover {
+        transform: scale(1.1);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+    }
+    
+    .range-input::-moz-range-thumb:active {
+        transform: scale(1.15);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+    
+    .range-input-min {
+        z-index: 3;
+    }
+    
+    .range-input-max {
+        z-index: 4;
+    }
+
+    /* Desktop selects: category & sort */
+    .filters-panel .form-select{
+        border-radius:10px;
+        border:1.5px solid var(--border2);
+        font-size:13px;
+        padding:9px 11px;
+        box-shadow:none;
+    }
+    .filters-panel .form-select:focus{
+        border-color:var(--accent);
+        box-shadow:0 0 0 0.12rem rgba(196,98,45,.18);
+    }
+    
+    /* Select2 Styling */
+    .select2-container {
+        width: 100% !important;
+    }
+    
+    .select2-container--bootstrap-5 .select2-selection {
+        border: 1.5px solid var(--border2);
+        border-radius: 10px;
+        min-height: 40px;
+        box-shadow:none !important;
+    }
+    
+    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+        background: linear-gradient(135deg, var(--veera-accent) 0%, var(--veera-accent-dark) 100%);
+        border: none;
+        color: #fff;
+        border-radius: 6px;
+        padding: 4px 10px;
+        margin: 2px;
+    }
+    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice span{
+        color:#fff !important;
+    }
+    
+    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove {
+        color: white;
+        margin-right: 5px;
+    }
+    
+    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove:hover {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .select2-dropdown {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+    }
+    
+    .select2-container--bootstrap-5 .select2-results__option--highlighted {
+        background: linear-gradient(135deg, var(--veera-accent-light) 0%, var(--veera-accent) 100%);
+        color: white;
+    }
+    
+    .filter-actions {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 2px solid #f0f0f0;
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+    }
+    .filter-actions .btn{
+        border-radius:999px;
+        font-weight:600;
+        letter-spacing:.03em;
+        font-size:13px;
+        padding:11px 16px;
+    }
+    .filter-actions #applyFiltersBtn{
+        background:var(--ink);
+        border:none;
+        color:#fff;
+        box-shadow:0 6px 18px rgba(28,16,8,.24);
+    }
+    .filter-actions #applyFiltersBtn:hover{
+        background:var(--accent);
+        box-shadow:0 8px 22px rgba(196,98,45,.32);
+    }
+    .filter-actions #clearFiltersBtn{
+        background:#fff;
+        border:1.5px solid var(--border2);
+        color:var(--ink2);
+    }
+    .filter-actions #clearFiltersBtn:hover{
+        border-color:var(--ink);
+    }
+    
+    .btn-filter-toggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 998;
+        background: linear-gradient(135deg, var(--veera-black) 0%, var(--veera-dark) 100%);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 14px 28px;
+        font-weight: 600;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        display: none;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-filter-toggle:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    
+    .btn-filter-toggle:active {
+        transform: translateY(0) scale(0.95);
+    }
+    
+    .btn-filter-toggle i {
+        font-size: 1.1rem;
+    }
+    
+    /* Mobile Styles */
+    @media (max-width: 767.98px) {
+        /* Break out of container on mobile */
+        .col-md-3 {
+            position: static !important;
+            overflow: hidden !important;
+        }
+        
+        .filters-panel {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            min-width: 100vw !important;
+            height: 100vh !important;
+            min-height: 100vh !important;
+            height: 100dvh !important; /* Dynamic viewport height for mobile browsers */
+            min-height: 100dvh !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1050 !important;
+            box-shadow: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+            transform: translateX(-100%) !important;
+            will-change: transform;
+        }
+        
+        .filters-panel.active {
+            transform: translateX(0) !important;
+        }
+        
+        /* Ensure no corner is visible when closed */
+        .filters-panel:not(.active) {
+            pointer-events: none !important;
+        }
+        
+        /* But allow close button to work when panel is active */
+        .filters-panel.active .btn-close-filters {
+            pointer-events: all !important;
+        }
+        
+        .filters-header {
+            pointer-events: all !important;
+            z-index: 10 !important;
+        }
+        
+        /* Prevent body scroll when filters are open */
+        body.filters-open {
+            overflow: hidden !important;
+            position: fixed !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        .filters-header {
+            flex-shrink: 0;
+            padding: 1.5rem 1.5rem;
+            background: linear-gradient(135deg, var(--veera-black) 0%, var(--veera-dark) 100%);
+            color: white;
+            margin: 0;
+            border-bottom: none;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        .filters-header h5 {
+            color: white;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+        
+        .btn-close-filters {
+            color: white !important;
+            font-size: 1.5rem;
+            opacity: 0.9;
+            pointer-events: all !important;
+            z-index: 10 !important;
+            position: relative;
+        }
+        
+        .btn-close-filters:hover {
+            opacity: 1;
+            background: rgba(255,255,255,0.1) !important;
+        }
+        
+        .btn-close-filters:active {
+            transform: scale(0.95);
+        }
+        
+        .filters-content {
+            flex: 1 1 auto !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            padding: 1.5rem !important;
+            -webkit-overflow-scrolling: touch;
+            min-height: 0 !important; /* Important for flexbox scrolling */
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            height: 100% !important;
+        }
+        
+        .filter-section {
+            margin-bottom: 2rem;
+            flex-shrink: 0;
+        }
+        
+        .filter-title {
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            color: var(--veera-text);
+            font-weight: 700;
+        }
+        
+        .price-range-container {
+            padding: 1.5rem 0;
+        }
+        
+        .price-display-item {
+            padding: 1rem;
+        }
+        
+        .price-value {
+            font-size: 1.2rem;
+        }
+        
+        .dual-range-slider {
+            height: 60px;
+            margin: 1.5rem 0;
+        }
+        
+        .range-input::-webkit-slider-thumb {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .range-input::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .select2-container {
+            width: 100% !important;
+        }
+        
+        .select2-container--bootstrap-5 .select2-selection {
+            min-height: 44px;
+            font-size: 1rem;
+        }
+        
+        .form-select {
+            font-size: 1rem;
+            padding: 0.75rem;
+        }
+        
+        .filter-actions {
+            flex-shrink: 0;
+            background: white;
+            padding: 1.5rem;
+            margin-top: auto;
+            border-top: 2px solid #f0f0f0;
+            position: sticky;
+            bottom: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .filter-section {
+            flex-shrink: 0;
+            width: 100%;
+        }
+        
+        .filter-actions .btn {
+            padding: 0.875rem 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            width: 100%;
+        }
+        
+        /* Ensure all child elements respect full width */
+        .filters-panel * {
+            max-width: 100%;
+        }
+        
+        .price-range-container,
+        .category-checkboxes,
+        .form-select {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .btn-filter-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 14px 28px;
+            font-size: 1rem;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            bottom: 80px; /* Position above WhatsApp button */
+            right: 20px;
+        }
+        
+        .btn-filter-toggle:active {
+            transform: scale(0.95);
+        }
+        
+        .filters-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(2px);
+            z-index: 1040;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .filters-overlay.active {
+            display: block;
+            opacity: 1;
+            visibility: visible;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    }
+    
+    /* Desktop: Keep filters visible */
+    @media (min-width: 768px) {
+        .filters-panel {
+            position: sticky;
+            top: 100px;
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            margin: 0;
+            padding: 1.5rem;
+        }
+        
+        .btn-filter-toggle {
+            display: none !important;
+        }
+        
+        .filters-overlay {
+            display: none !important;
+        }
+    }
+</style>
+
+<script>
+    (function() {
+        const filtersPanel = document.getElementById('filtersPanel');
+        const toggleFiltersBtn = document.getElementById('toggleFiltersBtn');
+        const closeFiltersBtn = document.getElementById('closeFiltersBtn');
+        const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+        const currentPage = '<%= typeof currentPage !== 'undefined' ? currentPage : 'catalog' %>';
+        
+        // Create overlay for mobile
+        const overlay = document.createElement('div');
+        overlay.className = 'filters-overlay';
+        overlay.id = 'filtersOverlay';
+        document.body.appendChild(overlay);
+        
+        // Toggle filters on mobile
+        if (toggleFiltersBtn) {
+            toggleFiltersBtn.addEventListener('click', function() {
+                filtersPanel.classList.add('active');
+                overlay.classList.add('active');
+                document.body.classList.add('filters-open');
+            });
+        }
+        
+        // Close filters
+        function closeFilters() {
+            filtersPanel.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.classList.remove('filters-open');
+        }
+        
+        if (closeFiltersBtn) {
+            closeFiltersBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                closeFilters();
+            });
+        }
+        
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                closeFilters();
+            }
+        });
+        
+        // Initialize price range slider
+        const minPriceRange = document.getElementById('minPriceRange');
+        const maxPriceRange = document.getElementById('maxPriceRange');
+        const minPriceDisplay = document.getElementById('minPriceDisplay');
+        const maxPriceDisplay = document.getElementById('maxPriceDisplay');
+        const minPriceInput = document.getElementById('minPrice');
+        const maxPriceInput = document.getElementById('maxPrice');
+        const rangeProgress = document.querySelector('.range-progress');
+        
+        function updatePriceRange() {
+            const minVal = parseInt(minPriceRange.value);
+            const maxVal = parseInt(maxPriceRange.value);
+            const min = parseInt(minPriceRange.min);
+            const max = parseInt(minPriceRange.max);
+            
+            // Ensure min doesn't exceed max
+            if (minVal > maxVal) {
+                minPriceRange.value = maxVal;
+                maxPriceRange.value = minVal;
+            }
+            
+            const finalMin = Math.min(minVal, maxVal);
+            const finalMax = Math.max(minVal, maxVal);
+            
+            // Update displays
+            minPriceDisplay.textContent = '₹' + finalMin.toLocaleString('en-IN');
+            maxPriceDisplay.textContent = '₹' + finalMax.toLocaleString('en-IN');
+            
+            // Update hidden inputs
+            minPriceInput.value = finalMin;
+            maxPriceInput.value = finalMax;
+            
+            // Update progress bar
+            const minPercent = ((finalMin - min) / (max - min)) * 100;
+            const maxPercent = ((finalMax - min) / (max - min)) * 100;
+            rangeProgress.style.left = minPercent + '%';
+            rangeProgress.style.width = (maxPercent - minPercent) + '%';
+        }
+        
+        // Initialize on load
+        updatePriceRange();
+        
+        // Update on slider change
+        if (minPriceRange && maxPriceRange) {
+            minPriceRange.addEventListener('input', updatePriceRange);
+            maxPriceRange.addEventListener('input', updatePriceRange);
+        }
+        
+        // Initialize Select2 for categories
+        function initSelect2() {
+        const categorySelect = document.getElementById('categorySelect');
+        const sortSelect = document.getElementById('sortBy');
+        if (!categorySelect && !sortSelect) return;
+            
+            // Load Select2 CSS first
+            if (!document.querySelector('link[href*="select2.min.css"]')) {
+                const select2CSS = document.createElement('link');
+                select2CSS.rel = 'stylesheet';
+                select2CSS.href = 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css';
+                document.head.appendChild(select2CSS);
+            }
+            
+            if (!document.querySelector('link[href*="select2-bootstrap-5-theme"]')) {
+                const select2BootstrapCSS = document.createElement('link');
+                select2BootstrapCSS.rel = 'stylesheet';
+                select2BootstrapCSS.href = 'https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css';
+                document.head.appendChild(select2BootstrapCSS);
+            }
+            
+            // Load jQuery if not available
+            if (typeof jQuery === 'undefined') {
+                const jqueryScript = document.createElement('script');
+                jqueryScript.src = 'https://code.jquery.com/jquery-3.6.0.min.js';
+                jqueryScript.onload = function() {
+                    loadSelect2JS();
+                };
+                document.head.appendChild(jqueryScript);
+            } else {
+                loadSelect2JS();
+            }
+            
+            function loadSelect2JS() {
+                // Load Select2 JS if not already loaded
+                if (typeof jQuery === 'undefined' || !jQuery.fn.select2) {
+                    const select2JS = document.createElement('script');
+                    select2JS.src = 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js';
+                    select2JS.onload = function() {
+                        setTimeout(initializeSelect2, 100);
+                    };
+                    document.head.appendChild(select2JS);
+                } else {
+                    initializeSelect2();
+                }
+            }
+            
+            function initializeSelect2() {
+                if (typeof jQuery !== 'undefined' && jQuery.fn.select2) {
+                    if (categorySelect) {
+                        jQuery('#categorySelect').select2({
+                            placeholder: 'Select categories...',
+                            allowClear: true,
+                            width: '100%',
+                            theme: 'bootstrap-5',
+                            closeOnSelect: false
+                        });
+                    }
+                    if (sortSelect) {
+                        jQuery('#sortBy').select2({
+                            minimumResultsForSearch: Infinity,
+                            width: '100%',
+                            theme: 'bootstrap-5'
+                        });
+                    }
+                } else {
+                    // Retry after a short delay if jQuery or Select2 not ready
+                    setTimeout(initializeSelect2, 100);
+                }
+            }
+        }
+        
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initSelect2);
+        } else {
+            initSelect2();
+        }
+        
+        // Apply filters
+        if (applyFiltersBtn) {
+            applyFiltersBtn.addEventListener('click', function() {
+                const minPrice = document.getElementById('minPrice').value;
+                const maxPrice = document.getElementById('maxPrice').value;
+                const categorySelect = document.getElementById('categorySelect');
+                const selectedCategories = categorySelect ? Array.from(categorySelect.selectedOptions).map(opt => opt.value) : [];
+                const sortBy = document.getElementById('sortBy').value;
+                
+                const params = new URLSearchParams();
+                // Add multiple categories
+                if (selectedCategories.length > 0) {
+                    selectedCategories.forEach(cat => {
+                        params.append('categories', cat);
+                    });
+                }
+                if (minPrice) params.append('minPrice', minPrice);
+                if (maxPrice) params.append('maxPrice', maxPrice);
+                
+                // Handle sort
+                if (sortBy === 'price_desc') {
+                    params.append('sortBy', 'price');
+                    params.append('sortOrder', 'desc');
+                } else if (sortBy === 'price') {
+                    params.append('sortBy', 'price');
+                    params.append('sortOrder', 'asc');
+                } else {
+                    params.append('sortBy', sortBy);
+                }
+                
+                const url = '/' + currentPage + (params.toString() ? '?' + params.toString() : '');
+                window.location.href = url;
+            });
+        }
+        
+        // Clear filters
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', function() {
+                const min = parseInt(minPriceRange.min);
+                const max = parseInt(minPriceRange.max);
+                
+                minPriceRange.value = min;
+                maxPriceRange.value = max;
+                updatePriceRange();
+                
+                // Clear Select2 categories
+                const categorySelect = document.getElementById('categorySelect');
+                if (categorySelect && typeof jQuery !== 'undefined' && jQuery.fn.select2) {
+                    jQuery('#categorySelect').val(null).trigger('change');
+                } else if (categorySelect) {
+                    categorySelect.selectedIndex = -1;
+                }
+                document.getElementById('sortBy').value = currentPage === 'catalog' ? 'title' : 'created_at';
+                
+                window.location.href = '/' + currentPage;
+            });
+        }
+    })();
+</script>
+

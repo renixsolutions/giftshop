@@ -1,0 +1,665 @@
+<%- include('../partials/header-gift') %>
+<%- include('../partials/navbar-gift', { 
+  currentPage: 'checkout',
+  cartCount: typeof cartCount !== 'undefined' ? cartCount : 0,
+  userId: typeof userId !== 'undefined' ? userId : null 
+}) %>
+
+<style>
+    /* Checkout layout shell */
+    .co-wrap{
+        max-width:1120px;
+        margin:24px auto 56px;
+        padding:0 24px;
+        display:grid;
+        grid-template-columns:minmax(0,1.1fr) 360px;
+        gap:28px;
+    }
+    @media(max-width:900px){
+        .co-wrap{
+            grid-template-columns:1fr;
+            padding:0 16px 40px;
+        }
+    }
+
+    .co-main .card{
+        border-radius:22px !important;
+        border:1px solid var(--border) !important;
+        box-shadow:0 10px 30px rgba(28,16,8,.06) !important;
+        background:var(--card);
+    }
+    .co-main{
+        padding:32px 28px 40px 0;
+    }
+    .co-title{
+        font-family:'Playfair Display',serif;
+        font-size:26px;
+        font-weight:900;
+        color:var(--ink);
+        padding:4px 2px 0;
+    }
+
+    /* Section spacing inside form */
+    .co-main #checkoutForm{
+        padding:18px 16px 10px;
+    }
+    .co-main #checkoutForm .co-section{
+        margin-bottom:28px;
+    }
+    .co-main #checkoutForm .co-sec-hd{
+        margin-bottom:12px;
+    }
+
+    /* Form controls – override Bootstrap */
+    .co-main #checkoutForm .form-label{
+        font-size:13px;
+        font-weight:600;
+        color:var(--ink2);
+        margin-bottom:4px;
+    }
+    .co-main #checkoutForm .form-control,
+    .co-main #checkoutForm .input-group-text{
+        border-radius:12px !important;
+        border:1.5px solid var(--border2) !important;
+        font-size:13px;
+        padding:10px 12px;
+        box-shadow:none !important;
+        background:#fff;
+    }
+    .co-main #checkoutForm .input-group-text{
+        background:var(--warm) !important;
+        color:var(--muted);
+        font-weight:500;
+    }
+    .co-main #checkoutForm .form-control::placeholder{
+        color:var(--faint);
+    }
+    .co-main #checkoutForm .form-control:focus{
+        border-color:var(--accent) !important;
+        box-shadow:0 0 0 0.16rem rgba(196,98,45,.18) !important;
+    }
+    .co-main #checkoutForm textarea.form-control{
+        min-height:90px;
+        resize:vertical;
+    }
+    .co-main #checkoutForm .form-check-label{
+        font-size:13px;
+        color:var(--muted);
+    }
+
+    /* Primary & secondary buttons in checkout */
+    .co-main #checkoutForm .btn.btn-primary.btn-lg{
+        border-radius:12px !important;
+        font-weight:600;
+        letter-spacing:.05em;
+        padding:13px 18px;
+        background:var(--ink);
+        border:none;
+        box-shadow:0 8px 20px rgba(28,16,8,.18);
+        color:#fff;
+    }
+    .co-main #checkoutForm .btn.btn-primary.btn-lg:hover{
+        background:var(--accent);
+        box-shadow:0 10px 26px rgba(196,98,45,.35);
+    }
+    .co-main #checkoutForm .btn.btn-outline-secondary.btn-lg{
+        border-radius:12px !important;
+        font-weight:500;
+        letter-spacing:.03em;
+        padding:13px 18px;
+        border:1.5px solid var(--border2);
+        color:var(--ink2);
+        background:#fff;
+    }
+    /* Map search button */
+    .co-main #checkoutForm #searchBtn{
+        border-radius:10px;
+        padding:0 16px;
+        font-size:13px;
+        font-weight:500;
+        background:var(--ink);
+        border:1px solid var(--ink);
+        box-shadow:0 4px 10px rgba(28,16,8,.16);
+    }
+    .co-main #checkoutForm #searchBtn:hover{
+        background:var(--accent);
+        border-color:var(--accent);
+    }
+    .co-main #checkoutForm .btn.btn-outline-secondary.btn-lg:hover{
+        border-color:var(--ink);
+        color:var(--ink);
+        background:var(--warm);
+    }
+
+    /* Map Styles */
+    .co-main #map{
+        width:100%;
+        height:300px;
+        position:relative;
+        border-radius:14px !important;
+        border:2px solid var(--border2) !important;
+        overflow:hidden;
+    }
+    .map-loading {
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        height:100%;
+        background:#f8f9fa;
+        border-radius:8px;
+    }
+    
+    /* Leaflet Map Styles */
+    .co-main .leaflet-container {
+        border-radius:14px !important;
+        z-index:1;
+    }
+    .leaflet-popup-content-wrapper {
+        border-radius:8px;
+    }
+    .custom-marker-icon {
+        background-color:#d32f2f;
+        border:3px solid #fff;
+        border-radius:50%;
+        width:30px;
+        height:30px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    /* Right sidebar */
+    .co-sidebar{
+        padding:32px 28px;
+        background:var(--warm);
+        border-radius:22px;
+        border:1px solid var(--border);
+        height:fit-content;
+    }
+</style>
+
+<div class="co-wrap" style="margin-top:24px;margin-bottom:56px;">
+    <div class="co-main">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="co-title" style="margin-bottom:18px;">
+                    <i class="bi bi-geo-alt"></i> Shipping Address
+                </div>
+                
+                <form action="/orders/checkout" method="POST" id="checkoutForm">
+                        <%- include('../partials/csrf-token') %>
+                        
+                        <!-- Contact section -->
+                        <div class="co-section">
+                            <div class="co-sec-hd">Contact details</div>
+                            <div class="co-grid">
+                                <div class="fg">
+                                    <label for="customer_name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="customer_name" name="customer_name" 
+                                           value="<%= typeof userName !== 'undefined' ? userName : '' %>" required>
+                                </div>
+                                <div class="fg">
+                                    <label for="customer_phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control" id="customer_phone" name="customer_phone" 
+                                           pattern="[0-9]{10}" 
+                                           maxlength="10" 
+                                           placeholder="Enter 10 digit mobile number"
+                                           required
+                                           oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Map Section for Address Selection -->
+                        <div class="co-section">
+                            <div class="co-sec-hd">Delivery location</div>
+                            
+                            <!-- Map Search Box -->
+                            <div class="fg" style="margin-bottom:14px;">
+                                <label class="form-label mb-1">
+                                    <i class="bi bi-map"></i> Search & select on map <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="mapSearch" 
+                                           placeholder="Search for address, city, landmark, or pincode..."
+                                           autocomplete="off">
+                                    <button class="btn btn-primary" type="button" id="searchBtn">
+                                        <i class="bi bi-search"></i> Search
+                                    </button>
+                                    <div id="searchResults" class="list-group" style="position: absolute; z-index: 1000; max-height: 200px; overflow-y: auto; display: none; width: 100%; top: 100%; margin-top: 2px;"></div>
+                                </div>
+                            </div>
+                            
+                            <div id="map"></div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="bi bi-info-circle"></i> Search for a location or click on the map / drag the marker to select your delivery address
+                            </small>
+                            <input type="hidden" id="selected_lat" name="latitude">
+                            <input type="hidden" id="selected_lng" name="longitude">
+                        </div>
+                        
+                        <!-- Address fields -->
+                        <div class="co-section">
+                            <div class="co-sec-hd">Address details</div>
+                            <div class="fg" style="margin-bottom:16px;">
+                                <label for="shipping_address" class="form-label">Complete Address <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="shipping_address" name="shipping_address" rows="3" 
+                                          placeholder="House / Flat No., Street, Area, Landmark" required></textarea>
+                            </div>
+                            <div class="co-grid">
+                                <div class="fg">
+                                    <label for="city" class="form-label">City <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="city" name="city" required>
+                                </div>
+                                
+                                <div class="fg">
+                                    <label for="state" class="form-label">State <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="state" name="state" required>
+                                </div>
+                                
+                                <div class="fg">
+                                    <label for="pincode" class="form-label">Pincode <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="pincode" name="pincode" 
+                                           pattern="[0-9]{6}" placeholder="6 digit pincode" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Delivery preferences -->
+                        <div class="co-section">
+                            <div class="co-sec-hd">Delivery preferences</div>
+                            <div class="co-grid full">
+                                <div class="fg">
+                                    <label for="delivery_date" class="form-label">Preferred Delivery Date</label>
+                                    <input type="date" class="form-control" id="delivery_date" name="delivery_date" min="<%= new Date().toISOString().split('T')[0] %>">
+                                </div>
+                                <div class="fg">
+                                    <label for="gift_note" class="form-label">Gift Message (optional)</label>
+                                    <textarea class="form-control" id="gift_note" name="gift_note" rows="3" placeholder="We'll print this on a card inside the gift..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment options -->
+                        <div class="co-section">
+                            <div class="co-sec-hd">Payment method</div>
+                            
+                            <label class="pay-opt">
+                                <input class="form-check-input" type="radio" name="payment_mode" id="pay_cod" value="cod" checked style="margin-right:10px;">
+                                <div class="pay-lbl">Cash on Delivery (COD) — Pay when you receive</div>
+                                <div class="pay-badge pb-cod">Popular</div>
+                            </label>
+                            
+                            <label class="pay-opt">
+                                <input class="form-check-input" type="radio" name="payment_mode" id="pay_partial" value="partial_cod" style="margin-right:10px;">
+                                <div class="pay-lbl">Pay 50% now, 50% on delivery</div>
+                                <div class="pay-badge pb-rec">Recommended</div>
+                            </label>
+                            
+                            <label class="pay-opt">
+                                <input class="form-check-input" type="radio" name="payment_mode" id="pay_full" value="full_online" style="margin-right:10px;">
+                                <div class="pay-lbl">Pay full amount online (UPI / Card / Net banking)</div>
+                            </label>
+                        </div>
+                        
+                        <div class="d-flex gap-3 mt-3">
+                            <button type="submit" class="btn btn-primary btn-lg flex-fill">
+                                <i class="bi bi-check-circle"></i> Place Order
+                            </button>
+                            <a href="/cart" class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-arrow-left"></i> Back to Cart
+                            </a>
+                        </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="co-sidebar">
+        <div class="cs-title" style="margin-bottom:18px;">Order Review</div>
+        
+        <% if (typeof cartItems !== 'undefined' && cartItems.length > 0) { %>
+        <% const subtotal = typeof totalAmount !== 'undefined' ? totalAmount : cartItems.reduce((s, item) => s + parseFloat(item.price) * (item.quantity || 1), 0); %>
+            <% cartItems.forEach(item => { %>
+            <div class="mini-item">
+                <div class="mi-img">
+                    <% if (item.image) { 
+                         let miniSrc = '';
+                         if (item.image.startsWith('http')) {
+                           miniSrc = item.image;
+                         } else if (item.image.startsWith('/')) {
+                           miniSrc = item.image;
+                         } else {
+                           miniSrc = '/uploads/' + item.image;
+                         }
+                    %>
+                        <img src="<%= miniSrc %>" alt="<%= item.title %>" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.onerror=null;this.style.display='none';">
+                    <% } else { %>
+                        🎁
+                    <% } %>
+                </div>
+                <div class="mi-info">
+                    <div class="mi-name"><%= item.title %></div>
+                    <div class="mi-meta">Qty: <%= item.quantity %></div>
+                </div>
+                <div class="mi-price">₹<%= (parseFloat(item.price) * item.quantity).toLocaleString('en-IN', {minimumFractionDigits: 2}) %></div>
+            </div>
+            <% }); %>
+            <div class="cs-row"><span>Subtotal</span><span>₹<%= subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></span></div>
+            <div class="cs-row"><span>Delivery</span><span style="color:var(--green);">FREE</span></div>
+            <div class="cs-total"><span class="cs-total-l">Total</span><span class="cs-total-r">₹<%= subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></span></div>
+        <% } else { %>
+            <p class="text-muted" style="font-size:13px;">No items in cart.</p>
+        <% } %>
+    </div>
+</div>
+
+<script>
+    // Phone number validation
+    const phoneInput = document.getElementById('customer_phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            // Remove any non-digit characters
+            this.value = this.value.replace(/[^0-9]/g, '');
+            
+            // Limit to 10 digits
+            if (this.value.length > 10) {
+                this.value = this.value.slice(0, 10);
+            }
+        });
+        
+        phoneInput.addEventListener('blur', function(e) {
+            if (this.value.length !== 10 && this.value.length > 0) {
+                this.setCustomValidity('Phone number must be exactly 10 digits');
+                this.reportValidity();
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+        
+        // Pincode validation
+        const pincodeInput = document.getElementById('pincode');
+        if (pincodeInput) {
+            pincodeInput.addEventListener('input', function(e) {
+                // Remove any non-digit characters
+                this.value = this.value.replace(/[^0-9]/g, '');
+                
+                // Limit to 6 digits
+                if (this.value.length > 6) {
+                    this.value = this.value.slice(0, 6);
+                }
+            });
+        }
+        
+        // Form submission validation
+        const form = document.getElementById('checkoutForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const phone = phoneInput.value.replace(/\D/g, '');
+                if (phone.length !== 10) {
+                    e.preventDefault();
+                    phoneInput.setCustomValidity('Phone number must be exactly 10 digits');
+                    phoneInput.reportValidity();
+                    phoneInput.focus();
+                    return false;
+                }
+                
+                const pincode = pincodeInput ? pincodeInput.value.replace(/\D/g, '') : '';
+                if (pincode && pincode.length !== 6) {
+                    e.preventDefault();
+                    pincodeInput.setCustomValidity('Pincode must be exactly 6 digits');
+                    pincodeInput.reportValidity();
+                    pincodeInput.focus();
+                    return false;
+                }
+            });
+        }
+    }
+</script>
+
+<!-- Leaflet CSS (Free OpenStreetMap) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Nominatim Geocoding (Free) -->
+<script src="https://unpkg.com/es6-promise@4.2.8/dist/es6-promise.auto.min.js"></script>
+
+<script>
+    let map;
+    let marker;
+    let isMapInitialized = false;
+    
+    // Initialize map when page loads
+    window.addEventListener('load', function() {
+        initMap();
+    });
+    
+    function initMap() {
+        // Default location (Neemuch, Madhya Pradesh, India)
+        const defaultLocation = [24.4539, 74.8683];
+        
+        // Initialize map
+        map = L.map('map').setView(defaultLocation, 13);
+        
+        // Add OpenStreetMap tiles (free)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // Create custom marker icon
+        const customIcon = L.divIcon({
+            className: 'custom-marker-icon',
+            html: '<div style="width: 100%; height: 100%; background-color: #d32f2f; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+        
+        // Create marker
+        marker = L.marker(defaultLocation, {
+            draggable: true,
+            icon: customIcon
+        }).addTo(map);
+        
+        // Get address for initial location
+        geocodePosition(defaultLocation[0], defaultLocation[1]);
+        
+        // Listen for marker drag end
+        marker.on('dragend', function(e) {
+            const position = marker.getLatLng();
+            geocodePosition(position.lat, position.lng);
+        });
+        
+        // Listen for map clicks
+        map.on('click', function(e) {
+            const clickedLocation = [e.latlng.lat, e.latlng.lng];
+            marker.setLatLng(clickedLocation);
+            geocodePosition(clickedLocation[0], clickedLocation[1]);
+        });
+        
+        // Try to get user's current location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const userLocation = [position.coords.latitude, position.coords.longitude];
+                    map.setView(userLocation, 15);
+                    marker.setLatLng(userLocation);
+                    geocodePosition(userLocation[0], userLocation[1]);
+                },
+                function(error) {
+                    console.log('Geolocation error:', error);
+                    // Keep default location
+                }
+            );
+        }
+        
+        isMapInitialized = true;
+        
+        // Setup search functionality
+        setupMapSearch();
+    }
+    
+    // Setup map search functionality
+    function setupMapSearch() {
+        const searchInput = document.getElementById('mapSearch');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchResults = document.getElementById('searchResults');
+        let searchTimeout;
+        
+        // Search on button click
+        searchBtn.addEventListener('click', function() {
+            performSearch(searchInput.value);
+        });
+        
+        // Search on Enter key
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performSearch(searchInput.value);
+            }
+        });
+        
+        // Show/hide results on focus/blur
+        searchInput.addEventListener('focus', function() {
+            if (searchResults.innerHTML.trim() !== '') {
+                searchResults.style.display = 'block';
+            }
+        });
+        
+        // Hide results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target) && !searchBtn.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
+        
+        // Perform search function
+        function performSearch(query) {
+            if (!query || query.trim() === '') {
+                searchResults.style.display = 'none';
+                return;
+            }
+            
+            // Show loading
+            searchResults.innerHTML = '<div class="list-group-item text-center"><small class="text-muted">Searching...</small></div>';
+            searchResults.style.display = 'block';
+            
+            // Use Nominatim search API (free) - prioritize India results
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1&countrycodes=in`, {
+                headers: {
+                    'User-Agent': 'ShubhamGarments/1.0'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        searchResults.innerHTML = '';
+                        data.forEach((result, index) => {
+                            const item = document.createElement('a');
+                            item.className = 'list-group-item list-group-item-action';
+                            item.innerHTML = `
+                                <div class="search-result-name">
+                                    <i class="bi bi-geo-alt-fill text-primary"></i> ${result.display_name}
+                                </div>
+                                <div class="search-result-address">
+                                    ${result.address ? (result.address.city || result.address.town || result.address.village || '') : ''}
+                                </div>
+                            `;
+                            item.addEventListener('click', function() {
+                                const lat = parseFloat(result.lat);
+                                const lng = parseFloat(result.lon);
+                                
+                                // Center map on selected location
+                                map.setView([lat, lng], 16);
+                                marker.setLatLng([lat, lng]);
+                                
+                                // Geocode to get full address details
+                                geocodePosition(lat, lng);
+                                
+                                // Hide search results
+                                searchResults.style.display = 'none';
+                                searchInput.value = result.display_name;
+                            });
+                            searchResults.appendChild(item);
+                        });
+                    } else {
+                        searchResults.innerHTML = '<div class="list-group-item text-center"><small class="text-muted">No results found</small></div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                    searchResults.innerHTML = '<div class="list-group-item text-center"><small class="text-danger">Error searching. Please try again.</small></div>';
+                });
+        }
+    }
+    
+    // Geocode position to get address (using Nominatim - free)
+    function geocodePosition(lat, lng) {
+        // Update hidden fields
+        document.getElementById('selected_lat').value = lat;
+        document.getElementById('selected_lng').value = lng;
+        
+        // Show loading indicator
+        const addressField = document.getElementById('shipping_address');
+        if (addressField) {
+            addressField.placeholder = 'Loading address...';
+        }
+        
+        // Use Nominatim for reverse geocoding (free, no API key required)
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+            headers: {
+                'User-Agent': 'ShubhamGarments/1.0'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.address) {
+                    const addr = data.address;
+                    let fullAddress = data.display_name || '';
+                    let city = addr.city || addr.town || addr.village || addr.county || addr.municipality || '';
+                    let state = addr.state || '';
+                    let pincode = addr.postcode || '';
+                    
+                    // Get form fields
+                    const cityField = document.getElementById('city');
+                    const stateField = document.getElementById('state');
+                    const pincodeField = document.getElementById('pincode');
+                    
+                    // Always update fields when location is selected on map
+                    if (addressField) {
+                        addressField.value = fullAddress.trim();
+                        addressField.placeholder = 'House/Flat No., Street, Area, Landmark';
+                    }
+                    
+                    if (cityField) {
+                        cityField.value = city;
+                    }
+                    
+                    if (stateField) {
+                        stateField.value = state;
+                    }
+                    
+                    if (pincodeField) {
+                        pincodeField.value = pincode;
+                    }
+                    
+                    // Show popup with address
+                    marker.bindPopup(`<strong>Selected Location</strong><br>${fullAddress}`).openPopup();
+                } else {
+                    // If no address found, show error
+                    if (addressField) {
+                        addressField.placeholder = 'Address not found. Please enter manually.';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Geocoding error:', error);
+                if (addressField) {
+                    addressField.placeholder = 'Error loading address. Please enter manually.';
+                }
+            });
+    }
+</script>
+
+<%- include('../partials/footer-gift') %>
+

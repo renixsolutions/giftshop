@@ -1,0 +1,73 @@
+<!-- Top Bar -->
+<div class="top-bar">
+    <div class="container">
+        <div class="row align-items-center justify-content-center">
+            <div class="col-12 text-center">
+                <span><i class="bi bi-telephone"></i> Contact Shubham Garments: +91 8770469369</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Promotional Banner -->
+<div class="promo-banner">
+    FREE SHIPPING ON ALL ORDERS. NO MINIMUM PURCHASE
+</div>
+
+<!-- Main Navigation -->
+<nav class="navbar navbar-expand-lg main-navbar shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <strong>SHUBHAM GARMENTS</strong>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border-color: white;">
+            <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'home' ? 'active' : '' %>" href="/">HOME</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'collections' ? 'active' : '' %>" href="/collections">COLLECTIONS</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'catalog' ? 'active' : '' %>" href="/catalog">CATALOG</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <% if (typeof userId !== 'undefined' && userId) { %>
+                    <li class="nav-item cart-badge">
+                        <a class="nav-link" href="/cart">
+                            <i class="bi bi-cart" style="font-size: 1.3rem;"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <%= typeof userName !== 'undefined' ? userName : 'Account' %>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/orders"><i class="bi bi-bag"></i> My Orders</a></li>
+                            <li><a class="dropdown-item" href="/profile"><i class="bi bi-person"></i> My Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="/auth/logout" method="POST" class="d-inline w-100">
+                                    <%- include('csrf-token') %>
+                                    <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Logout</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                <% } else { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/auth/login">Sign In</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/auth/register">Create Account</a>
+                    </li>
+                <% } %>
+            </ul>
+        </div>
+    </div>
+</nav>
+

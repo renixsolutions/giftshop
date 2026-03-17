@@ -1,0 +1,126 @@
+<%- include('../partials/header-gift') %>
+<%- include('../partials/navbar-gift', { 
+  currentPage: 'home',
+  cartCount: typeof cartCount !== 'undefined' ? cartCount : 0,
+  userId: typeof userId !== 'undefined' ? userId : null 
+}) %>
+
+<div class="gh-404">
+  <div class="gh-404-inner">
+    <div class="gh-404-pill">404</div>
+    <h1 class="gh-404-title">Page not found</h1>
+    <p class="gh-404-sub">
+      The page you’re looking for may have moved, been deleted, or never existed.
+    </p>
+    <div class="gh-404-actions">
+      <a href="/" class="gh-404-btn-primary">Back to Home</a>
+      <a href="/collections" class="gh-404-btn-ghost">Browse all gifts</a>
+    </div>
+    <div class="gh-404-hint">
+      Tip: Check the URL or use the navigation above to find what you need.
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer-gift') %>
+
+<style>
+  .gh-404{
+    min-height:calc(100vh - 200px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:64px 24px 80px;
+    background:var(--cream);
+  }
+  .gh-404-inner{
+    max-width:520px;
+    width:100%;
+    text-align:center;
+    background:#fff;
+    border-radius:24px;
+    padding:40px 32px 36px;
+    border:1px solid var(--border);
+    box-shadow:0 18px 55px rgba(0,0,0,.08);
+  }
+  .gh-404-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:6px 14px;
+    border-radius:999px;
+    background:var(--accentbg);
+    color:var(--accent);
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .gh-404-title{
+    font-family:'Playfair Display',serif;
+    font-size:28px;
+    font-weight:900;
+    color:var(--ink);
+    margin-bottom:8px;
+  }
+  .gh-404-sub{
+    font-size:14px;
+    color:var(--muted);
+    margin-bottom:24px;
+  }
+  .gh-404-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:16px;
+  }
+  .gh-404-btn-primary,
+  .gh-404-btn-ghost{
+    display:inline-block;
+    padding:12px 22px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+    cursor:pointer;
+    transition:all .2s;
+  }
+  .gh-404-btn-primary{
+    background:var(--ink);
+    color:#fff;
+    box-shadow:0 8px 20px rgba(0,0,0,.18);
+  }
+  .gh-404-btn-primary:hover{
+    background:var(--accent);
+    color:#fff;
+    transform:translateY(-1px);
+  }
+  .gh-404-btn-ghost{
+    background:#fff;
+    color:var(--ink);
+    border:1px solid var(--border2);
+  }
+  .gh-404-btn-ghost:hover{
+    border-color:var(--ink);
+    background:var(--warm);
+  }
+  .gh-404-hint{
+    font-size:12px;
+    color:var(--faint);
+    margin-top:4px;
+  }
+  @media (max-width:768px){
+    .gh-404{
+      padding:40px 16px 56px;
+    }
+    .gh-404-inner{
+      padding:32px 20px 30px;
+      border-radius:20px;
+    }
+    .gh-404-title{
+      font-size:24px;
+    }
+  }
+</style>

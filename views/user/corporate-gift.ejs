@@ -1,0 +1,42 @@
+<%- include('../partials/header-gift') %>
+<%- include('../partials/navbar-gift', { currentPage: 'corporate', cartCount: typeof cartCount !== 'undefined' ? cartCount : 0, userId: typeof userId !== 'undefined' ? userId : null }) %>
+
+<div class="section" style="max-width:720px;margin:0 auto;">
+  <div class="sec-head">
+    <div class="sec-tag">Bulk & Corporate</div>
+    <div class="sec-title">Corporate Gifting</div>
+    <div class="sec-sub">Custom hampers and bulk orders for events, rewards, and client gifting. Tell us your requirements and we’ll get back within 24 hours.</div>
+  </div>
+  <form action="/corporate" method="post" style="background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:32px;">
+    <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="fg">
+        <label class="fl">Company name</label>
+        <input type="text" name="company_name" class="fi" placeholder="Acme Pvt Ltd">
+      </div>
+      <div class="fg">
+        <label class="fl">Contact person</label>
+        <input type="text" name="contact_person" class="fi" placeholder="Your name">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="fg">
+        <label class="fl">Email</label>
+        <input type="email" name="email" class="fi" placeholder="you@company.com" required>
+      </div>
+      <div class="fg">
+        <label class="fl">Phone</label>
+        <input type="tel" name="phone" class="fi" placeholder="+91 98765 43210">
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:20px;">
+      <label class="fl">Message (quantity, budget, occasion)</label>
+      <textarea name="message" class="fi" style="min-height:120px;resize:vertical;" placeholder="e.g. 50 hampers for Diwali, budget ₹800 per piece..."></textarea>
+    </div>
+    <button type="submit" class="btn-solid">Send inquiry</button>
+  </form>
+</div>
+
+<%- include('../partials/footer-gift') %>
+</body>
+</html>

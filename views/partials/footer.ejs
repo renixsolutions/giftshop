@@ -1,0 +1,198 @@
+<footer class="footer mt-auto">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <h5><strong>SHUBHAM GARMENTS</strong></h5>
+                <p>Your trusted destination for authentic and beautiful clothing.</p>
+                <p class="mb-0 mt-2"><i class="bi bi-geo-alt"></i> Kukdeshwar, Neemuch-458116, Madhya Pradesh</p>
+            </div>
+            <div class="col-md-4 mb-3">
+                <h5>Quick Links</h5>
+                <ul class="list-unstyled">
+                    <li><a href="/products" class="text-white-50" style="text-decoration: none;">Collections</a></li>
+                    <li><a href="/products" class="text-white-50" style="text-decoration: none;">Catalog</a></li>
+                    <li><a href="/orders" class="text-white-50" style="text-decoration: none;">My Orders</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4 mb-3">
+                <h5>Contact</h5>
+                <p class="mb-0"><i class="bi bi-telephone"></i> Phone: +91 8770469369</p>
+                <p class="mb-0 mt-2"><i class="bi bi-person"></i> Owner: Shubham Jain</p>
+                <p class="mb-0"><i class="bi bi-envelope"></i> Email: info@shubhamcollection.com</p>
+                <p class="mb-0 mt-2"><i class="bi bi-geo-alt"></i> Kukdeshwar, Neemuch-458116, Madhya Pradesh</p>
+            </div>
+        </div>
+        <hr style="border-color: rgba(255,255,255,0.2);">
+        <div class="text-center">
+            <p class="mb-0">&copy; 2024 Shubham Garments. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- WhatsApp Float Button -->
+<a href="https://wa.me/918770469369" class="whatsapp-float" target="_blank" title="Contact us on WhatsApp">
+    <i class="bi bi-whatsapp"></i>
+</a>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Image Placeholder Handler -->
+<script>
+    // Create a placeholder image (SVG data URI)
+    const placeholderImage = 'data:image/svg+xml;base64,' + btoa(`
+        <svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100%" height="100%" fill="#f0f0f0"/>
+            <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="18" fill="#999" text-anchor="middle" dominant-baseline="middle">
+                No Image Available
+            </text>
+        </svg>
+    `);
+    
+    // Function to handle broken images
+    function handleImageError(img) {
+        if (img.src !== placeholderImage) {
+            img.src = placeholderImage;
+            img.onerror = null; // Prevent infinite loop
+            img.style.backgroundColor = '#f0f0f0';
+            img.style.display = 'block';
+        }
+    }
+    
+    // Function to get safe image source (handles null/empty)
+    function getSafeImageSrc(imageSrc) {
+        if (!imageSrc || imageSrc === 'null' || imageSrc === 'undefined' || imageSrc.trim() === '') {
+            return placeholderImage;
+        }
+        return imageSrc;
+    }
+    
+    // Apply to all existing images on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const images = document.querySelectorAll('img');
+        images.forEach(function(img) {
+            // Handle null/empty src
+            if (!img.src || img.src === 'null' || img.src === 'undefined' || img.getAttribute('src') === '' || !img.getAttribute('src')) {
+                img.src = placeholderImage;
+            }
+            
+            // Add error handler if not already present
+            if (!img.hasAttribute('data-placeholder-handled')) {
+                img.setAttribute('data-placeholder-handled', 'true');
+                img.addEventListener('error', function() {
+                    handleImageError(this);
+                });
+            }
+        });
+    });
+    
+    // Also handle dynamically added images
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+                if (node.nodeType === 1) { // Element node
+                    if (node.tagName === 'IMG') {
+                        if (!node.src || node.src === 'null' || node.getAttribute('src') === '' || !node.getAttribute('src')) {
+                            node.src = placeholderImage;
+                        }
+                        if (!node.hasAttribute('data-placeholder-handled')) {
+                            node.setAttribute('data-placeholder-handled', 'true');
+                            node.addEventListener('error', function() {
+                                handleImageError(this);
+                            });
+                        }
+                    }
+                    // Also check for images inside added nodes
+                    const images = node.querySelectorAll && node.querySelectorAll('img');
+                    if (images) {
+                        images.forEach(function(img) {
+                            if (!img.src || img.src === 'null' || img.getAttribute('src') === '' || !img.getAttribute('src')) {
+                                img.src = placeholderImage;
+                            }
+                            if (!img.hasAttribute('data-placeholder-handled')) {
+                                img.setAttribute('data-placeholder-handled', 'true');
+                                img.addEventListener('error', function() {
+                                    handleImageError(this);
+                                });
+                            }
+                        });
+                    }
+                }
+            });
+        });
+    });
+    
+    // Start observing
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+</script>
+
+<!-- Toast Notification Script (if not already included in header) -->
+<script>
+    // Make showToast available globally for use in other scripts
+    if (typeof window.showToast === 'undefined') {
+        window.showToast = function(message, type = 'info', duration = 5000) {
+            const container = document.getElementById('toastContainer');
+            if (!container) {
+                // Create container if it doesn't exist
+                const newContainer = document.createElement('div');
+                newContainer.className = 'toast-container';
+                newContainer.id = 'toastContainer';
+                document.body.appendChild(newContainer);
+            }
+            
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `veera-toast ${type}`;
+            
+            const icons = {
+                success: 'bi-check-circle-fill',
+                error: 'bi-x-circle-fill',
+                warning: 'bi-exclamation-triangle-fill',
+                info: 'bi-info-circle-fill'
+            };
+            
+            const titles = {
+                success: 'Success',
+                error: 'Error',
+                warning: 'Warning',
+                info: 'Info'
+            };
+            
+            toast.innerHTML = `
+                <i class="bi ${icons[type] || icons.info} toast-icon"></i>
+                <div class="toast-content">
+                    <div class="toast-title">${titles[type] || 'Notification'}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="removeToast(this.parentElement)">
+                    <i class="bi bi-x"></i>
+                </button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            if (duration > 0) {
+                setTimeout(() => {
+                    removeToast(toast);
+                }, duration);
+            }
+            
+            return toast;
+        };
+        
+        window.removeToast = function(toast) {
+            if (!toast) return;
+            toast.classList.add('hiding');
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.parentElement.removeChild(toast);
+                }
+            }, 300);
+        };
+    }
+</script>
+</body>
+</html>
+

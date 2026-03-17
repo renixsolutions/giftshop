@@ -1,0 +1,720 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout">
+    <%- include('../partials/admin-sidebar', { currentPage: 'products' }) %>
+    
+    <div class="admin-main">
+        <%- include('../partials/admin-header', { pageTitle: product ? 'Edit Product' : 'Add New Product' }) %>
+        
+        <div class="admin-content">
+            <% if (typeof flash !== 'undefined' && flash) { %>
+                <div class="alert alert-<%= flash.type === 'error' ? 'danger' : 'success' %> alert-dismissible fade show" role="alert">
+                    <%= flash.message %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <% } %>
+            
+            <div class="admin-card">
+                <h4 class="mb-4"><i class="bi bi-<%= product ? 'pencil' : 'plus-circle' %>"></i> <%= product ? 'Edit Product' : 'Add New Product' %></h4>
+                
+                <form action="<%= product ? `/admin/products/${product.id}` : '/admin/products' %>" method="POST" enctype="multipart/form-data" id="productForm">
+                    <%- include('../partials/csrf-token') %>
+                    <div class="row product-form-row">
+                        <div class="col-md-8 product-form-fields">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Product Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       value="<%= product ? product.title : '' %>" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="description" name="description" rows="5" required><%= product ? product.description : '' %></textarea>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="original_price" class="form-label">Original Price (₹)</label>
+                                    <input type="number" step="0.01" class="form-control" id="original_price" name="original_price" 
+                                           value="<%= product ? product.original_price : '' %>" 
+                                           placeholder="Leave empty if no discount">
+                                    <small class="text-muted">Original price before discount</small>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="price" class="form-label">Selling Price (₹) <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" class="form-control" id="price" name="price" 
+                                           value="<%= product ? product.price : '' %>" required>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="discount_percentage" class="form-label">Discount (%)</label>
+                                    <input type="number" class="form-control" id="discount_percentage" name="discount_percentage" 
+                                           value="<%= product ? product.discount_percentage : 0 %>" min="0" max="100">
+                                    <small class="text-muted">Auto-calculated if original price is set</small>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="stock" class="form-label">Stock Quantity <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="stock" name="stock" 
+                                           value="<%= product ? product.stock : '' %>" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Select Category</option>
+                                    <% if (typeof categories !== 'undefined' && categories && categories.length > 0) { %>
+                                        <% categories.forEach(cat => { %>
+                                            <option value="<%= cat.name %>" <%= product && (product.category === cat.name || product.category_id === cat.id) ? 'selected' : '' %>>
+                                                <%= cat.name %>
+                                            </option>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <!-- Fallback categories if database is empty -->
+                                        <option value="Jeans" <%= product && product.category === 'Jeans' ? 'selected' : '' %>>Jeans</option>
+                                        <option value="Shirt" <%= product && product.category === 'Shirt' ? 'selected' : '' %>>Shirt</option>
+                                        <option value="Sarees" <%= product && product.category === 'Sarees' ? 'selected' : '' %>>Sarees</option>
+                                        <option value="Lehenga" <%= product && product.category === 'Lehenga' ? 'selected' : '' %>>Lehenga</option>
+                                        <option value="Suits" <%= product && product.category === 'Suits' ? 'selected' : '' %>>Suits</option>
+                                    <% } %>
+                                </select>
+                                <small class="text-muted">
+                                    <a href="/admin/categories" target="_blank">Manage Categories</a>
+                                </small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="occasion" class="form-label">Occasions (optional, multiple)</label>
+                                <select class="form-select" id="occasion" name="occasion_ids" multiple>
+                                    <% if (typeof occasions !== 'undefined' && occasions && occasions.length > 0) { %>
+                                        <% occasions.forEach(occ => { %>
+                                            <% const isSelected = Array.isArray(productOccasionIds) ? productOccasionIds.includes(occ.id) : (product && (product.occasion_id === occ.id)); %>
+                                            <option value="<%= occ.id %>" <%= isSelected ? 'selected' : '' %>>
+                                                <%= occ.name %>
+                                            </option>
+                                        <% }); %>
+                                    <% } %>
+                                </select>
+                                <small class="text-muted">
+                                    Hold Ctrl (Cmd on Mac) to select multiple. 
+                                    <a href="/admin/occasions" target="_blank">Manage Occasions</a>
+                                </small>
+                            </div>
+                            
+                            <!-- Gift shop: Personalization -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_personalized" name="is_personalized" value="1" <%= product && product.is_personalized ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="is_personalized">Requires personalization (e.g. custom text or photo)</label>
+                                </div>
+                                <div id="personalizationTypeWrap" class="mt-2 ms-3" style="<%= product && product.is_personalized ? '' : 'display:none;' %>">
+                                    <label class="form-label small">Personalization type</label>
+                                    <div>
+                                        <label class="form-check form-check-inline"><input class="form-check-input" type="radio" name="personalization_type" value="text" <%= product && product.personalization_type === 'text' ? 'checked' : '' %>> Text</label>
+                                        <label class="form-check form-check-inline"><input class="form-check-input" type="radio" name="personalization_type" value="image" <%= product && product.personalization_type === 'image' ? 'checked' : '' %>> Image</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Gift shop: Hamper item -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_hamper_item" name="is_hamper_item" value="1" <%= product && product.is_hamper_item ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="is_hamper_item">Available in Build a Hamper</label>
+                                </div>
+                                <div id="hamperGenderWrap" class="mt-2 ms-3" style="<%= product && product.is_hamper_item ? '' : 'display:none;' %>">
+                                    <label class="form-label small">Hamper segment</label>
+                                    <select class="form-select form-select-sm" name="hamper_gender" style="max-width:200px;">
+                                        <option value="">Unisex</option>
+                                        <option value="male" <%= product && product.hamper_gender === 'male' ? 'selected' : '' %>>Male</option>
+                                        <option value="female" <%= product && product.hamper_gender === 'female' ? 'selected' : '' %>>Female</option>
+                                        <option value="unisex" <%= product && product.hamper_gender === 'unisex' ? 'selected' : '' %>>Unisex</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="imageFile" class="form-label">Primary Image (shown first)</label>
+                                <input type="file" class="form-control" id="imageFile" name="image" accept="image/*">
+                                <small class="text-muted">This image uses the cropper (2:3 ratio) and appears as the main card image.</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="image" class="form-label">Or Enter Image URL</label>
+                                <input type="url" class="form-control" id="image" name="image" 
+                                       value="<%= product && !product.image.startsWith('/uploads/') ? product.image : '' %>" 
+                                       placeholder="https://example.com/image.jpg">
+                                <small class="text-muted">Leave empty if uploading file</small>
+                            </div>
+                            
+                            <!-- Hidden input for cropped image -->
+                            <input type="hidden" id="croppedImage" name="croppedImage">
+                            
+                            <!-- Additional gallery images -->
+                            <div class="mb-3">
+                                <label for="galleryFiles" class="form-label">Gallery Images (optional)</label>
+                                <input type="file" class="form-control" id="galleryFiles" name="gallery" accept="image/*" multiple>
+                                <small class="text-muted">You can upload up to 6 extra images; they will show as a gallery on the product page.</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 product-form-preview">
+                            <div class="admin-card">
+                                <h6 class="mb-3">Image Preview & Cropper</h6>
+                                
+                                <!-- Image Upload Area -->
+                                <div id="uploadArea" class="mb-3" style="display: none;">
+                                    <div style="max-width: 100%; margin-bottom: 1rem;">
+                                        <img id="imagePreview" style="max-width: 100%; display: block;">
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-primary btn-sm" id="cropBtn" style="display: none;">
+                                            <i class="bi bi-scissors"></i> Crop Image
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="cancelCropBtn" style="display: none;">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Current Image Display -->
+                                <div id="currentImagePreview" style="width: 100%; height: 300px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 1rem;">
+                                    <img id="previewImg" src="<%= product ? product.image : 'https://via.placeholder.com/400x600?text=Product+Image' %>" 
+                                         alt="Preview" style="max-width: 100%; max-height: 100%; object-fit: cover;">
+                                </div>
+                                
+                                <!-- Existing gallery thumbnails -->
+                                <% if (typeof galleryImages !== 'undefined' && galleryImages && galleryImages.length > 0) { %>
+                                    <div class="mb-3">
+                                        <label class="form-label small">Existing gallery images</label>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <% galleryImages.forEach(function(img) { %>
+                                                <div style="width:70px;height:70px;border-radius:6px;overflow:hidden;border:1px solid #eee;">
+                                                    <img src="<%= img.image_url %>" alt="" style="width:100%;height:100%;object-fit:cover;">
+                                                </div>
+                                            <% }); %>
+                                        </div>
+                                    </div>
+                                <% } %>
+                                
+                                <% if (product && product.qr_code) { %>
+                                    <div class="mb-3 p-3" style="background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0;">
+                                        <label class="form-label mb-2"><strong><i class="bi bi-qr-code-scan"></i> Product QR Code</strong></label>
+                                        <div class="text-center mb-2">
+                                            <% if (product.qr_code_image) { %>
+                                                <img src="<%= product.qr_code_image %>" alt="QR Code" style="max-width: 150px; height: auto; display: block; margin: 0 auto; border: 1px solid #ddd; padding: 8px; background: white; border-radius: 8px;">
+                                            <% } else { %>
+                                                <div id="editQRCodeContainer" style="min-height: 150px; display: flex; align-items: center; justify-content: center;">
+                                                    <canvas id="editQRCode" style="max-width: 150px; height: auto; display: block; margin: 0 auto; border: 1px solid #ddd; padding: 8px; background: white;"></canvas>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                        <div class="d-flex justify-content-center gap-2 mb-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="printQRCode('<%= product.qr_code %>', '<%= product.title %>', '<%= product.category %>', '<%= product.price %>', '<%= product.id %>', '<%= product.image || "" %>')" title="Print QR Code Sticker">
+                                                <i class="bi bi-printer"></i> Print QR Code
+                                            </button>
+                                        </div>
+                                    </div>
+                                <% } %>
+                                
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-circle"></i> <%= product ? 'Update Product' : 'Create Product' %>
+                                    </button>
+                                    <a href="/admin/products" class="btn btn-outline-secondary">Cancel</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('is_personalized') && document.getElementById('is_personalized').addEventListener('change', function() {
+    document.getElementById('personalizationTypeWrap').style.display = this.checked ? 'block' : 'none';
+});
+document.getElementById('is_hamper_item') && document.getElementById('is_hamper_item').addEventListener('change', function() {
+    document.getElementById('hamperGenderWrap').style.display = this.checked ? 'block' : 'none';
+});
+</script>
+
+<!-- Cropper.js CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css">
+
+<!-- Cropper.js JS -->
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
+<script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+    <% if (product && product.qr_code) { %>
+        // Display QR code in edit form - using multiple fallback methods
+        (function() {
+            let retryCount = 0;
+            const maxRetries = 20;
+            
+            function generateEditQRCode() {
+                const canvas = document.getElementById('editQRCode');
+                if (!canvas) {
+                    console.error('Edit QR Code canvas element not found');
+                    if (retryCount < maxRetries) {
+                        retryCount++;
+                        setTimeout(generateEditQRCode, 200);
+                    }
+                    return;
+                }
+                
+                // Try QRCode library
+                if (typeof QRCode !== 'undefined') {
+                    try {
+                        console.log('Generating Edit QR code for:', '<%= product.qr_code %>');
+                        QRCode.toCanvas(canvas, '<%= product.qr_code %>', {
+                            width: 150,
+                            margin: 2,
+                            color: {
+                                dark: '#000000',
+                                light: '#FFFFFF'
+                            },
+                            errorCorrectionLevel: 'M'
+                        }, function (error) {
+                            if (error) {
+                                console.error('QR Code generation error:', error);
+                                // Fallback: show barcode number
+                                const container = document.getElementById('editQRCodeContainer');
+                                if (container) {
+                                    container.innerHTML = '<div style="padding: 15px; text-align: center; border: 2px dashed #ddd; border-radius: 8px;"><strong>QR Code:</strong><br><code style="font-size: 12px; padding: 8px; background: #f0f0f0; border-radius: 4px; display: inline-block; margin-top: 8px;"><%= product.qr_code %></code></div>';
+                                }
+                            } else {
+                                console.log('Edit QR Code generated successfully');
+                                canvas.style.border = 'none';
+                            }
+                        });
+                    } catch (e) {
+                        console.error('QR Code generation exception:', e);
+                    }
+                } else {
+                    // Library not loaded, retry
+                    if (retryCount < maxRetries) {
+                        retryCount++;
+                        console.log('QRCode library not loaded, retrying...', retryCount);
+                        setTimeout(generateEditQRCode, 300);
+                    } else {
+                        console.error('QRCode library failed to load after', maxRetries, 'retries');
+                        const container = document.getElementById('editQRCodeContainer');
+                        if (container) {
+                            container.innerHTML = '<div style="padding: 15px; text-align: center; border: 2px dashed #ddd; border-radius: 8px;"><strong>QR Code:</strong><br><code style="font-size: 12px; padding: 8px; background: #f0f0f0; border-radius: 4px; display: inline-block; margin-top: 8px;"><%= product.qr_code %></code><br><small style="color: #666; margin-top: 8px; display: block;">Library loading issue. Please refresh.</small></div>';
+                        }
+                    }
+                }
+            }
+            
+            // Wait for everything to be ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(generateEditQRCode, 300);
+                });
+            } else {
+                setTimeout(generateEditQRCode, 300);
+            }
+        })();
+    <% } %>
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Auto-calculate discount percentage
+    const originalPriceInput = document.getElementById('original_price');
+    const priceInput = document.getElementById('price');
+    const discountInput = document.getElementById('discount_percentage');
+    
+    function calculateDiscount() {
+        const originalPrice = parseFloat(originalPriceInput.value) || 0;
+        const sellingPrice = parseFloat(priceInput.value) || 0;
+        
+        if (originalPrice > 0 && sellingPrice > 0 && originalPrice > sellingPrice) {
+            const discount = Math.round(((originalPrice - sellingPrice) / originalPrice) * 100);
+            discountInput.value = discount;
+        } else if (!originalPriceInput.value) {
+            // Keep current discount value if original price is cleared
+            if (discountInput.value && discountInput.value > 0) {
+                // Don't clear if manually set
+            }
+        }
+    }
+    
+    if (originalPriceInput && priceInput && discountInput) {
+        originalPriceInput.addEventListener('input', calculateDiscount);
+        priceInput.addEventListener('input', calculateDiscount);
+    }
+    
+    let cropper;
+    let imageFileInput = document.getElementById('imageFile');
+    let imageUrlInput = document.getElementById('image');
+    let imagePreview = document.getElementById('imagePreview');
+    let previewImg = document.getElementById('previewImg');
+    let uploadArea = document.getElementById('uploadArea');
+    let currentImagePreview = document.getElementById('currentImagePreview');
+    let cropBtn = document.getElementById('cropBtn');
+    let cancelCropBtn = document.getElementById('cancelCropBtn');
+    let croppedImageInput = document.getElementById('croppedImage');
+    
+    // Handle file upload
+    imageFileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                uploadArea.style.display = 'block';
+                currentImagePreview.style.display = 'none';
+                
+                // Initialize cropper
+                if (cropper) {
+                    cropper.destroy();
+                }
+                
+                cropper = new Cropper(imagePreview, {
+                    aspectRatio: 2 / 3, // Product image ratio
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 0.8,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false,
+                });
+                
+                cropBtn.style.display = 'block';
+                cancelCropBtn.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Handle URL input
+    imageUrlInput.addEventListener('input', function(e) {
+        if (e.target.value && e.target.value.startsWith('http')) {
+            previewImg.src = e.target.value;
+            uploadArea.style.display = 'none';
+            currentImagePreview.style.display = 'flex';
+            imageFileInput.value = '';
+            croppedImageInput.value = '';
+        }
+    });
+    
+    // Crop button
+    cropBtn.addEventListener('click', function() {
+        if (cropper) {
+            const canvas = cropper.getCroppedCanvas({
+                width: 800,
+                height: 1200,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high'
+            });
+            
+            const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            croppedImageInput.value = croppedDataUrl;
+            
+            // Update preview
+            previewImg.src = croppedDataUrl;
+            uploadArea.style.display = 'none';
+            currentImagePreview.style.display = 'flex';
+            
+            // Clear file input
+            imageFileInput.value = '';
+            
+            // Destroy cropper
+            cropper.destroy();
+            cropper = null;
+            
+            cropBtn.style.display = 'none';
+            cancelCropBtn.style.display = 'none';
+        }
+    });
+    
+    // Cancel crop
+    cancelCropBtn.addEventListener('click', function() {
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        uploadArea.style.display = 'none';
+        currentImagePreview.style.display = 'flex';
+        imageFileInput.value = '';
+        cropBtn.style.display = 'none';
+        cancelCropBtn.style.display = 'none';
+    });
+    
+    // Print QR Code Sticker Function
+    window.printQRCode = function(qrCode, title, category, price, productId, image) {
+        const shopName = 'SHUBHAM GARMENTS';
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                    <title>QR Code Sticker - ${title}</title>
+                    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" onload="window.qrcodeLoaded = true;"><\/script>
+                <style>
+                    * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
+                    body {
+                        font-family: 'Arial', 'Helvetica', sans-serif;
+                        padding: 10px;
+                        background: #f5f5f5;
+                    }
+                    .sticker-container {
+                        width: 3.5in;
+                        height: 2.5in;
+                        border: 2px solid #000;
+                        padding: 12px;
+                        margin: 5px;
+                        display: inline-block;
+                        vertical-align: top;
+                        page-break-inside: avoid;
+                        background: white;
+                    }
+                    .shop-name {
+                        text-align: center;
+                        font-size: 16px;
+                        font-weight: bold;
+                        margin-bottom: 10px;
+                        border-bottom: 2px solid #000;
+                        padding-bottom: 6px;
+                        letter-spacing: 0.5px;
+                    }
+                    .product-details {
+                        display: flex;
+                        gap: 12px;
+                        align-items: flex-start;
+                    }
+                    .product-image-section {
+                        flex-shrink: 0;
+                        width: 80px;
+                        height: 80px;
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                        overflow: hidden;
+                        background: #f5f5f5;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    .product-image-section img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+                    .product-info {
+                        flex: 1;
+                        font-size: 11px;
+                        line-height: 1.4;
+                    }
+                    .product-info .product-title {
+                        font-weight: bold;
+                        margin-bottom: 6px;
+                        font-size: 13px;
+                        color: #000;
+                        word-wrap: break-word;
+                    }
+                    .product-info .product-category {
+                        color: #333;
+                        margin-bottom: 4px;
+                        font-size: 11px;
+                    }
+                    .product-info .product-price {
+                        font-weight: bold;
+                        color: #d32f2f;
+                        font-size: 14px;
+                        margin: 6px 0;
+                    }
+                    .product-info .product-id {
+                        font-size: 10px;
+                        color: #666;
+                        margin-top: 4px;
+                    }
+                    .qr-code-section {
+                        text-align: center;
+                        flex-shrink: 0;
+                    }
+                    .qr-code-section canvas {
+                        width: 100px !important;
+                        height: 100px !important;
+                        display: block;
+                        margin: 0 auto;
+                        border: 1px solid #ddd;
+                        padding: 4px;
+                        background: white;
+                    }
+                    .loading-text {
+                        text-align: center;
+                        color: #666;
+                        font-size: 10px;
+                        padding: 20px;
+                    }
+                    @media print {
+                        body { 
+                            margin: 0; 
+                            padding: 0;
+                            background: white;
+                        }
+                        .sticker-container { 
+                            page-break-inside: avoid;
+                            margin: 0;
+                            border: 2px solid #000;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="sticker-container">
+                    <div class="shop-name">${shopName}</div>
+                    <div class="product-details">
+                        <div id="productImageContainer" class="product-image-section" style="display: none;">
+                            <img id="productImage" src="" alt="${title}" onerror="document.getElementById('productImageContainer').style.display='none';">
+                        </div>
+                        <div class="product-info">
+                            <div class="product-title">${title}</div>
+                            <div class="product-category"><strong>Category:</strong> ${category}</div>
+                            <div class="product-price">₹${parseFloat(price).toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                            <div class="product-id"><strong>ID:</strong> #${productId}</div>
+                        </div>
+                        <div class="qr-code-section">
+                            <div id="loadingText" class="loading-text">Generating QR Code...</div>
+                            <canvas id="qrcode" style="display: none;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                    <script>
+                        (function() {
+                            // Set product image if provided
+                            const productImage = '${image || ""}';
+                            if (productImage && productImage.trim() !== '') {
+                                const imgContainer = document.getElementById('productImageContainer');
+                                const img = document.getElementById('productImage');
+                                if (imgContainer && img) {
+                                    let imageUrl = productImage;
+                                    // If it's a local path, construct full URL
+                                    if (imageUrl.startsWith('/')) {
+                                        imageUrl = window.location.origin + imageUrl;
+                                    }
+                                    img.src = imageUrl;
+                                    imgContainer.style.display = 'flex';
+                                }
+                            }
+                            
+                            const qrCodeValue = '${qrCode}';
+                            const canvas = document.getElementById('qrcode');
+                            const loadingText = document.getElementById('loadingText');
+                            
+                            if (!qrCodeValue || qrCodeValue.trim() === '') {
+                                if (loadingText) loadingText.textContent = 'Invalid QR Code';
+                                return;
+                            }
+                            
+                            if (!canvas) {
+                                if (loadingText) loadingText.textContent = 'Canvas not found';
+                                return;
+                            }
+                            
+                            function generatePrintQRCode() {
+                                if (typeof QRCode === 'undefined') {
+                                    if (loadingText) loadingText.textContent = 'Loading QR Code library...';
+                                    setTimeout(generatePrintQRCode, 100);
+                                    return;
+                                }
+                                
+                                try {
+                                    QRCode.toCanvas(canvas, qrCodeValue, {
+                                        width: 200,
+                                        margin: 2,
+                                        color: {
+                                            dark: '#000000',
+                                            light: '#FFFFFF'
+                                        },
+                                        errorCorrectionLevel: 'M'
+                                    }, function (error) {
+                                        if (error) {
+                                            console.error('QR Code generation error:', error);
+                                            if (loadingText) {
+                                                loadingText.textContent = 'Error generating QR Code';
+                                                loadingText.style.color = '#d32f2f';
+                                            }
+                                        } else {
+                                            if (canvas) {
+                                                canvas.style.display = 'block';
+                                            }
+                                            if (loadingText) {
+                                                loadingText.style.display = 'none';
+                                            }
+                                            
+                                            // Wait a bit more to ensure canvas is rendered
+                                            setTimeout(function() {
+                                                window.print();
+                                            }, 800);
+                                        }
+                                    });
+                                } catch (e) {
+                                    console.error('QR Code generation exception:', e);
+                                    if (loadingText) {
+                                        loadingText.textContent = 'Error: ' + (e.message || 'Unknown error');
+                                        loadingText.style.color = '#d32f2f';
+                                    }
+                                }
+                            }
+                            
+                            // Wait for DOM and library to be ready
+                            if (document.readyState === 'loading') {
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    setTimeout(generatePrintQRCode, 300);
+                                });
+                            } else {
+                                setTimeout(generatePrintQRCode, 300);
+                            }
+                        })();
+                    <\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    };
+    
+    // Sidebar toggle
+    document.getElementById('mobileSidebarToggle')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
+    });
+    
+    document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('sidebarOverlay').classList.remove('active');
+    });
+    
+    document.getElementById('sidebarOverlay')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.remove('active');
+        this.classList.remove('active');
+    });
+</script>
+
+<style>
+    #imagePreview {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .cropper-container {
+        max-width: 100%;
+    }
+</style>
+</body>
+</html>

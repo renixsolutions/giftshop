@@ -1,0 +1,18 @@
+<!-- Admin Header -->
+<header class="admin-header">
+    <div class="header-content">
+        <button class="sidebar-toggle-btn d-md-none" id="mobileSidebarToggle">
+            <i class="bi bi-list"></i>
+        </button>
+        <div class="header-title">
+            <h4 class="mb-0"><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Admin Panel' %></h4>
+        </div>
+        <div class="header-actions">
+            <div class="admin-user-info">
+                <i class="bi bi-person-circle"></i>
+                <span><%= typeof adminName !== 'undefined' ? adminName : 'Admin' %></span>
+            </div>
+        </div>
+    </div>
+</header>
+

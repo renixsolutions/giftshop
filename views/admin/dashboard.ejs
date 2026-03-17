@@ -1,0 +1,448 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout">
+    <%- include('../partials/admin-sidebar', { currentPage: 'dashboard' }) %>
+    
+    <div class="admin-main">
+        <%- include('../partials/admin-header', { pageTitle: 'Dashboard' }) %>
+        
+        <div class="admin-content">
+            <% if (typeof flash !== 'undefined' && flash) { %>
+                <div class="alert alert-<%= flash.type === 'error' ? 'danger' : 'success' %> alert-dismissible fade show" role="alert">
+                    <%= flash.message %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <% } %>
+            
+            <div class="row mb-4 g-3">
+                <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+                    <div class="stat-card primary">
+                        <h5><i class="bi bi-box-seam"></i> Total Products</h5>
+                        <h2><%= productCount %></h2>
+                        <a href="/admin/products" class="text-white" style="text-decoration: none; opacity: 0.9;">
+                            View All <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+                    <div class="stat-card warning">
+                        <h5><i class="bi bi-clock-history"></i> Pending Orders</h5>
+                        <h2><%= pendingOrdersCount %></h2>
+                        <a href="/admin/orders?status=pending" class="text-white" style="text-decoration: none; opacity: 0.9;">
+                            View Orders <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+                    <div class="stat-card success">
+                        <h5><i class="bi bi-cart-check"></i> Total Orders</h5>
+                        <h2><%= totalOrdersCount %></h2>
+                        <a href="/admin/orders" class="text-white" style="text-decoration: none; opacity: 0.9;">
+                            View All <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+                    <div class="stat-card info">
+                        <h5><i class="bi bi-graph-up"></i> Total Revenue</h5>
+                        <h2>₹<%= (totalRevenue || 0).toLocaleString('en-IN', {minimumFractionDigits: 2}) %></h2>
+                        <span style="opacity: 0.9; font-size: 0.9rem;">All Time</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts Row -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-8 mb-4">
+                    <div class="admin-card">
+                        <h5 class="mb-4"><i class="bi bi-bar-chart-fill"></i> Orders & Revenue (Last 6 Months)</h5>
+                        <div style="height: 350px; position: relative;">
+                            <canvas id="ordersRevenueChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="admin-card">
+                        <h5 class="mb-4"><i class="bi bi-pie-chart-fill"></i> Orders by Status</h5>
+                        <div style="height: 350px; position: relative;">
+                            <canvas id="ordersStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row g-3 mb-4">
+                <div class="col-lg-6 mb-4">
+                    <div class="admin-card">
+                        <h5 class="mb-4"><i class="bi bi-pie-chart-fill"></i> Products by Category</h5>
+                        <div style="height: 350px; position: relative;">
+                            <canvas id="productsCategoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <div class="admin-card">
+                        <h5 class="mb-4"><i class="bi bi-trophy-fill"></i> Top Selling Products</h5>
+                        <div style="height: 350px; position: relative;">
+                            <canvas id="topProductsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row g-3">
+                <div class="col-md-6 mb-4">
+                    <div class="admin-card">
+                        <h5 class="mb-4"><i class="bi bi-lightning-charge"></i> Quick Actions</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="/admin/products/new" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> <span class="d-none d-sm-inline">Add Product</span><span class="d-sm-none">Add</span>
+                            </a>
+                            <a href="/admin/products" class="btn btn-outline-primary">
+                                <i class="bi bi-box-seam"></i> <span class="d-none d-sm-inline">Manage Products</span><span class="d-sm-none">Products</span>
+                            </a>
+                            <a href="/admin/orders" class="btn btn-outline-info">
+                                <i class="bi bi-cart-check"></i> <span class="d-none d-sm-inline">View Orders</span><span class="d-sm-none">Orders</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="admin-card">
+                        <h5 class="mb-4"><i class="bi bi-info-circle"></i> System Status</h5>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Database</span>
+                            <span class="badge bg-success">Connected</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Server</span>
+                            <span class="badge bg-success">Running</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Last Updated</span>
+                            <span class="text-muted small"><%= new Date().toLocaleString() %></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Sidebar toggle for mobile
+    document.getElementById('mobileSidebarToggle')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
+    });
+    
+    document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('sidebarOverlay').classList.remove('active');
+    });
+    
+    document.getElementById('sidebarOverlay')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.remove('active');
+        this.classList.remove('active');
+    });
+    
+    // Chart.js configuration
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.font.size = 12;
+    Chart.defaults.plugins.legend.display = true;
+    Chart.defaults.plugins.legend.position = 'bottom';
+    
+    // Colorful color palettes
+    const vibrantColors = [
+        'rgba(255, 99, 132, 0.8)',   // Pink
+        'rgba(54, 162, 235, 0.8)',   // Blue
+        'rgba(255, 206, 86, 0.8)',   // Yellow
+        'rgba(75, 192, 192, 0.8)',   // Teal
+        'rgba(153, 102, 255, 0.8)',  // Purple
+        'rgba(255, 159, 64, 0.8)',   // Orange
+        'rgba(199, 199, 199, 0.8)',   // Grey
+        'rgba(83, 102, 255, 0.8)',    // Indigo
+        'rgba(255, 99, 255, 0.8)',    // Magenta
+        'rgba(99, 255, 132, 0.8)'     // Green
+    ];
+    
+    const vibrantBorders = [
+        'rgba(255, 99, 132, 1)',
+        'rgba(54, 162, 235, 1)',
+        'rgba(255, 206, 86, 1)',
+        'rgba(75, 192, 192, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(255, 159, 64, 1)',
+        'rgba(199, 199, 199, 1)',
+        'rgba(83, 102, 255, 1)',
+        'rgba(255, 99, 255, 1)',
+        'rgba(99, 255, 132, 1)'
+    ];
+    
+    // Orders & Revenue Bar Chart (Last 6 Months)
+    const ordersByMonthData = <%- JSON.stringify(Array.isArray(ordersByMonth) ? ordersByMonth : []) %>;
+    const revenueByMonthData = <%- JSON.stringify(Array.isArray(revenueByMonth) ? revenueByMonth : []) %>;
+    
+    const monthLabels = ordersByMonthData.map(item => {
+        const date = new Date(item.month + '-01');
+        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    });
+    
+    const ordersData = ordersByMonthData.map(item => parseInt(item.count));
+    const revenueData = revenueByMonthData.map(item => parseFloat(item.revenue || 0));
+    
+    const ordersRevenueCtx = document.getElementById('ordersRevenueChart');
+    if (ordersRevenueCtx && ordersByMonthData.length > 0) {
+        new Chart(ordersRevenueCtx, {
+            type: 'bar',
+            data: {
+                labels: monthLabels,
+                datasets: [
+                    {
+                        label: 'Orders',
+                        data: ordersData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Revenue (₹)',
+                        data: revenueData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.8)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        type: 'line',
+                        yAxisID: 'y1',
+                        tension: 0.4,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (context.dataset.label === 'Revenue (₹)') {
+                                    return 'Revenue: ₹' + parseFloat(context.parsed.y).toLocaleString('en-IN', {minimumFractionDigits: 2});
+                                }
+                                return context.dataset.label + ': ' + context.parsed.y;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Orders'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Revenue (₹)'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+    } else if (ordersRevenueCtx) {
+        // Show message if no data
+        ordersRevenueCtx.parentElement.innerHTML = '<div class="text-center p-4 text-muted"><i class="bi bi-inbox" style="font-size: 3rem;"></i><p class="mt-2">No order data available yet</p></div>';
+    }
+    
+    // Orders by Status Pie Chart
+    const ordersByStatusData = <%- JSON.stringify(Array.isArray(ordersByStatus) ? ordersByStatus : []) %>;
+    const statusLabels = ordersByStatusData.map(item => item.status.charAt(0).toUpperCase() + item.status.slice(1));
+    const statusCounts = ordersByStatusData.map(item => parseInt(item.count));
+    
+    const statusColors = {
+        'pending': 'rgba(255, 206, 86, 0.8)',
+        'processing': 'rgba(54, 162, 235, 0.8)',
+        'shipped': 'rgba(153, 102, 255, 0.8)',
+        'delivered': 'rgba(75, 192, 192, 0.8)',
+        'cancelled': 'rgba(255, 99, 132, 0.8)'
+    };
+    
+    const statusBorderColors = {
+        'pending': 'rgba(255, 206, 86, 1)',
+        'processing': 'rgba(54, 162, 235, 1)',
+        'shipped': 'rgba(153, 102, 255, 1)',
+        'delivered': 'rgba(75, 192, 192, 1)',
+        'cancelled': 'rgba(255, 99, 132, 1)'
+    };
+    
+    const ordersStatusCtx = document.getElementById('ordersStatusChart');
+    if (ordersStatusCtx && ordersByStatusData.length > 0) {
+        new Chart(ordersStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    data: statusCounts,
+                    backgroundColor: ordersByStatusData.map(item => statusColors[item.status.toLowerCase()] || vibrantColors[0]),
+                    borderColor: ordersByStatusData.map(item => statusBorderColors[item.status.toLowerCase()] || vibrantBorders[0]),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else if (ordersStatusCtx) {
+        // Show message if no data
+        ordersStatusCtx.parentElement.innerHTML = '<div class="text-center p-4 text-muted"><i class="bi bi-inbox" style="font-size: 3rem;"></i><p class="mt-2">No order status data available yet</p></div>';
+    }
+    
+    // Products by Category Pie Chart
+    const productsByCategoryData = <%- JSON.stringify(Array.isArray(productsByCategory) ? productsByCategory : []) %>;
+    const categoryLabels = productsByCategoryData.map(item => item.category);
+    const categoryCounts = productsByCategoryData.map(item => parseInt(item.count));
+    
+    const productsCategoryCtx = document.getElementById('productsCategoryChart');
+    if (productsCategoryCtx && productsByCategoryData.length > 0) {
+        new Chart(productsCategoryCtx, {
+            type: 'pie',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    data: categoryCounts,
+                    backgroundColor: vibrantColors.slice(0, categoryLabels.length),
+                    borderColor: vibrantBorders.slice(0, categoryLabels.length),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else if (productsCategoryCtx) {
+        // Show message if no data
+        productsCategoryCtx.parentElement.innerHTML = '<div class="text-center p-4 text-muted"><i class="bi bi-inbox" style="font-size: 3rem;"></i><p class="mt-2">No category data available yet</p></div>';
+    }
+    
+    // Top Selling Products Bar Chart
+    const topProductsData = <%- JSON.stringify(Array.isArray(topProducts) ? topProducts : []) %>;
+    const productLabels = topProductsData.map(item => item.title.length > 20 ? item.title.substring(0, 20) + '...' : item.title);
+    const productQuantities = topProductsData.map(item => parseInt(item.total_quantity || 0));
+    
+    const topProductsCtx = document.getElementById('topProductsChart');
+    if (topProductsCtx && topProductsData.length > 0) {
+        new Chart(topProductsCtx, {
+            type: 'bar',
+            data: {
+                labels: productLabels,
+                datasets: [{
+                    label: 'Quantity Sold',
+                    data: productQuantities,
+                    backgroundColor: vibrantColors.slice(0, productLabels.length),
+                    borderColor: vibrantBorders.slice(0, productLabels.length),
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Quantity Sold: ' + context.parsed.x;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Quantity Sold'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Products'
+                        }
+                    }
+                }
+            }
+        });
+    } else if (topProductsCtx) {
+        // Show message if no data
+        topProductsCtx.parentElement.innerHTML = '<div class="text-center p-4 text-muted"><i class="bi bi-inbox" style="font-size: 3rem;"></i><p class="mt-2">No sales data available yet</p></div>';
+    }
+</script>
+</body>
+</html>

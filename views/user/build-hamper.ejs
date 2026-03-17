@@ -1,0 +1,331 @@
+<%- include('../partials/header-gift') %>
+<%- include('../partials/navbar-gift', { currentPage: 'build', cartCount: typeof cartCount !== 'undefined' ? cartCount : 0, userId: typeof userId !== 'undefined' ? userId : null }) %>
+
+<script>
+  // Expose current user id for build-hamper flow
+  window.__userId = <%- JSON.stringify(typeof userId !== 'undefined' ? userId : null) %>;
+</script>
+
+<style>
+  /* Small view-specific tweaks for smoother flow */
+  .step-panel{display:none;}
+  .step-panel.active{display:block;}
+  #btn-continue,#btn-back{min-width:160px;}
+</style>
+
+<div class="builder-hero">
+  <h1>Build Your <i>Perfect</i> Hamper</h1>
+  <p>Personalise every detail — from the packaging to the personal message inside</p>
+</div>
+
+<div class="stepper" id="hamper-stepper">
+  <div class="sp active" data-step="1"><span class="sp-c">1</span>Choose Packaging</div>
+  <div class="sp-line"></div>
+  <div class="sp" data-step="2"><span class="sp-c">2</span>Add Items</div>
+  <div class="sp-line"></div>
+  <div class="sp" data-step="3"><span class="sp-c">3</span>Personalise & Review</div>
+</div>
+
+<div class="builder-wrap">
+  <div class="builder-content">
+    <!-- Step 1: Box selection -->
+    <div id="step-box" class="step-panel active">
+      <div class="bc-title">Step 1 — Choose Your Packaging</div>
+      <div class="bc-sub">Select the base box for your hamper. Price will be added to your total.</div>
+      <div class="pkg-grid">
+        <% if (typeof boxes !== 'undefined' && boxes.length) { %>
+          <% boxes.forEach(function(box) { %>
+        <div class="pkg-opt" data-box-id="<%= box.id %>" data-box-name="<%= box.name %>" data-box-price="<%= box.base_price %>">
+          <div class="pkg-icon"><%= box.icon || '📦' %></div>
+          <div class="pkg-name"><%= box.name %></div>
+          <div class="pkg-price">₹<%= Number(box.base_price).toLocaleString('en-IN') %></div>
+          <div class="pkg-desc"><%= box.description || '' %></div>
+        </div>
+          <% }); %>
+        <% } else { %>
+        <div class="pkg-opt sel" data-box-id="1" data-box-name="Pinewood Tray" data-box-price="499">
+          <div class="pkg-icon">📦</div>
+          <div class="pkg-name">Pinewood Tray</div>
+          <div class="pkg-price">₹499</div>
+          <div class="pkg-desc">Classic wooden tray</div>
+        </div>
+        <div class="pkg-opt" data-box-id="2" data-box-name="Kappa Board Box" data-box-price="349">
+          <div class="pkg-icon">📦</div>
+          <div class="pkg-name">Kappa Board Box</div>
+          <div class="pkg-price">₹349</div>
+          <div class="pkg-desc">Lightweight sturdy box</div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Step 2: Add items -->
+    <div id="step-items" class="step-panel">
+      <div class="bc-title">Step 2 — Add Items to Your Box</div>
+      <div class="bc-sub">Tap any item to add it to your hamper. Mix and match as you like!</div>
+      <% if (typeof categoriesWithItems !== 'undefined' && categoriesWithItems.length) { %>
+        <% categoriesWithItems.forEach(function(cat) { %>
+      <div class="items-section">
+        <div class="items-sec-hd"><%= cat.name %></div>
+        <div class="items-grid">
+          <% cat.items.forEach(function(item) { %>
+          <div class="icard" data-product-id="<%= item.id %>" data-name="<%= item.title %>" data-price="<%= item.price %>" data-personalized="<%= item.is_personalized ? '1' : '0' %>" data-personalization-type="<%= item.personalization_type || '' %>">
+            <div class="icard-icon"><%= item.image ? '🖼' : '🎁' %></div>
+            <div class="icard-name"><%= item.title %></div>
+            <div class="icard-price">+₹<%= Number(item.price).toLocaleString('en-IN') %></div>
+            <button type="button" class="icard-btn">Add to Box</button>
+          </div>
+          <% }); %>
+        </div>
+      </div>
+        <% }); %>
+      <% } else { %>
+      <div class="items-section">
+        <div class="items-sec-hd">Chocolates & Sweets</div>
+        <div class="items-grid">
+          <div class="icard" data-product-id="1" data-name="Ferrero Rocher 6pc" data-price="299"><div class="icard-icon">🍫</div><div class="icard-name">Ferrero Rocher 6pc</div><div class="icard-price">+₹299</div><button type="button" class="icard-btn">Add to Box</button></div>
+          <div class="icard" data-product-id="2" data-name="Lindt Assorted" data-price="499"><div class="icard-icon">🍬</div><div class="icard-name">Lindt Assorted</div><div class="icard-price">+₹499</div><button type="button" class="icard-btn">Add to Box</button></div>
+        </div>
+      </div>
+      <div class="items-section">
+        <div class="items-sec-hd">Mugs & Drinkware</div>
+        <div class="items-grid">
+          <div class="icard" data-product-id="3" data-name="Premium Ceramic Mug" data-price="249"><div class="icard-icon">☕</div><div class="icard-name">Premium Ceramic Mug</div><div class="icard-price">+₹249</div><button type="button" class="icard-btn">Add to Box</button></div>
+        </div>
+      </div>
+      <% } %>
+    </div>
+
+    <!-- Step 3: Personalise & Review -->
+    <div id="step-personalise" class="step-panel">
+      <div class="bc-title">Step 3 — Personalise & Review</div>
+      <div class="bc-sub">Add a gift message and delivery preference. Your selected box and items appear in the summary on the right.</div>
+      
+      <div class="items-section">
+        <div class="items-sec-hd">Gift message</div>
+        <div class="fg">
+          <label for="hamperGiftNote" class="fl">Gift Message (optional)</label>
+          <textarea id="hamperGiftNote" class="fi" rows="3" placeholder="We’ll print this on a card inside the gift..."></textarea>
+        </div>
+      </div>
+
+      <div class="items-section">
+        <div class="items-sec-hd">Delivery</div>
+        <div class="fg" style="max-width:260px;">
+          <label for="hamperDeliveryDate" class="fl">Preferred Delivery Date</label>
+          <input type="date" id="hamperDeliveryDate" class="fi">
+        </div>
+      </div>
+
+      <p style="font-size:12.5px;color:var(--muted);margin-top:8px;">
+        You can always adjust items or packaging from the summary on the right before placing your order.
+      </p>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:24px;">
+      <button type="button" class="btn-solid" id="btn-continue">Continue to Personalise →</button>
+      <button type="button" class="btn-ghost" id="btn-back">← Back</button>
+    </div>
+  </div>
+
+  <div class="bsidebar">
+    <div class="bsb-title">Your Hamper <span class="bsb-count" id="item-count">0 items</span></div>
+    <div class="box-vis" id="box-vis"></div>
+    <div class="price-rows" id="price-rows"></div>
+    <div class="pt"><span>Total</span><span id="hamper-total">₹0</span></div>
+    <button type="button" class="btn-block" id="btn-add-to-cart">Add to Cart →</button>
+    <button type="button" class="btn-block btn-block-ghost" style="margin-top:8px;">Save for Later</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  var selectedBox = null;
+  var selectedItems = [];
+  var currentStep = 1;
+
+  // Stepper handling for 3 main steps
+  function setStep(step) {
+    currentStep = step;
+    var panels = {
+      1: document.getElementById('step-box'),
+      2: document.getElementById('step-items'),
+      3: document.getElementById('step-personalise')
+    };
+    Object.keys(panels).forEach(function(k){
+      if (panels[k]) {
+        panels[k].classList.toggle('active', Number(k) === step);
+      }
+    });
+    var steps = document.querySelectorAll('#hamper-stepper .sp');
+    var lines = document.querySelectorAll('#hamper-stepper .sp-line');
+    steps.forEach(function(el){
+      var s = Number(el.dataset.step);
+      el.classList.toggle('active', s === step);
+      el.classList.toggle('done', s < step);
+    });
+    lines.forEach(function(line, idx){
+      line.classList.toggle('done', idx + 1 < step);
+    });
+
+    // Update primary button label per step
+    var btnContinue = document.getElementById('btn-continue');
+    if (!btnContinue) return;
+    if (step === 1) {
+      btnContinue.textContent = 'Continue to Add Items →';
+    } else if (step === 2) {
+      btnContinue.textContent = 'Continue to Personalise →';
+    } else if (step === 3) {
+      btnContinue.textContent = 'Add to Cart →';
+    }
+  }
+
+  function updateTotal() {
+    var base = selectedBox ? Number(selectedBox.price) : 0;
+    var itemsTotal = selectedItems.reduce(function(s, i) { return s + Number(i.price) * (i.qty || 1); }, 0);
+    var total = base + itemsTotal;
+    document.getElementById('hamper-total').textContent = '₹' + total.toLocaleString('en-IN');
+    document.getElementById('item-count').textContent = (selectedItems.length + (selectedBox ? 1 : 0)) + ' items';
+  }
+
+  function renderSidebar() {
+    var vis = document.getElementById('box-vis');
+    var rows = document.getElementById('price-rows');
+    vis.innerHTML = '';
+    rows.innerHTML = '';
+    if (selectedBox) {
+      vis.innerHTML += '<div class="btag">' + (selectedBox.icon || '📦') + ' ' + selectedBox.name + ' <span class="btag-x" data-remove="box">×</span></div>';
+      rows.innerHTML += '<div class="pr"><span>' + selectedBox.name + '</span><span>₹' + Number(selectedBox.price).toLocaleString('en-IN') + '</span></div>';
+    }
+    selectedItems.forEach(function(it, idx) {
+      vis.innerHTML += '<div class="btag" data-idx="' + idx + '">' + it.name + ' <span class="btag-x" data-idx="' + idx + '">×</span></div>';
+      rows.innerHTML += '<div class="pr"><span>' + it.name + '</span><span>₹' + Number(it.price).toLocaleString('en-IN') + '</span></div>';
+    });
+    updateTotal();
+  }
+
+  document.querySelectorAll('.pkg-opt').forEach(function(el) {
+    el.addEventListener('click', function() {
+      document.querySelectorAll('.pkg-opt').forEach(function(o) { o.classList.remove('sel'); });
+      this.classList.add('sel');
+      selectedBox = { id: this.dataset.boxId, name: this.dataset.boxName, price: this.dataset.boxPrice, icon: '📦' };
+      renderSidebar();
+    });
+  });
+
+  document.querySelectorAll('.icard').forEach(function(card) {
+    var btn = card.querySelector('.icard-btn');
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = card.dataset.productId, name = card.dataset.name, price = card.dataset.price;
+      var idx = selectedItems.findIndex(function(i) { return i.id === id; });
+      if (idx >= 0) {
+        selectedItems.splice(idx, 1);
+        card.classList.remove('on');
+        btn.textContent = 'Add to Box';
+      } else {
+        selectedItems.push({ id: id, name: name, price: price, qty: 1 });
+        card.classList.add('on');
+        btn.textContent = '✓ Added';
+      }
+      renderSidebar();
+    });
+  });
+
+  document.getElementById('box-vis').addEventListener('click', function(e) {
+    var t = e.target;
+    if (t.classList.contains('btag-x')) {
+      if (t.dataset.remove === 'box') { selectedBox = null; document.querySelectorAll('.pkg-opt').forEach(function(o) { o.classList.remove('sel'); }); }
+      else if (t.dataset.idx !== undefined) {
+        selectedItems.splice(parseInt(t.dataset.idx, 10), 1);
+        document.querySelectorAll('.icard').forEach(function(c) {
+          if (selectedItems.some(function(i) { return i.id === c.dataset.productId; })) return;
+          c.classList.remove('on');
+          c.querySelector('.icard-btn').textContent = 'Add to Box';
+        });
+      }
+      renderSidebar();
+    }
+  });
+
+  document.getElementById('btn-add-to-cart').addEventListener('click', function() {
+    // Require login for hamper add-to-cart
+    if (!window.__userId) {
+      if (window.__giftAuthOpen) {
+        window.__giftAuthOpen('login');
+      } else {
+        alert('Please sign in to add a hamper to cart.');
+      }
+      return;
+    }
+
+    if (!selectedBox) { alert('Please select a box first.'); return; }
+    var noteEl = document.getElementById('hamperGiftNote');
+    var dateEl = document.getElementById('hamperDeliveryDate');
+    var payload = {
+      boxId: selectedBox.id,
+      items: selectedItems.map(function(i) { return { productId: i.id, qty: i.qty || 1 }; }),
+      giftNote: noteEl ? (noteEl.value || '') : '',
+      deliveryDate: dateEl ? (dateEl.value || '') : ''
+    };
+    fetch('/api/hampers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').content },
+      body: JSON.stringify(payload)
+    }).then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.success) {
+          window.location.href = '/cart';
+        } else {
+          alert(data.message || 'Could not add to cart.');
+        }
+      })
+      .catch(function() {
+        alert('Something went wrong. Please try again.');
+      });
+  });
+
+  // Continue / Back buttons between steps
+  var btnContinue = document.getElementById('btn-continue');
+  var btnBack = document.getElementById('btn-back');
+
+  if (btnContinue) {
+    btnContinue.addEventListener('click', function () {
+      if (currentStep === 1) {
+        if (!selectedBox) {
+          alert('Please choose your packaging first.');
+          return;
+        }
+        setStep(2);
+        // scroll to top of builder on step change
+        window.scrollTo({ top: document.querySelector('.builder-wrap').offsetTop - 100, behavior: 'smooth' });
+      } else if (currentStep === 2) {
+        if (!selectedItems.length) {
+          alert('Please add at least one item to your box.');
+          return;
+        }
+        setStep(3);
+        window.scrollTo({ top: document.querySelector('.builder-wrap').offsetTop - 100, behavior: 'smooth' });
+      } else if (currentStep === 3) {
+        // Final step: trigger add-to-cart
+        var addBtn = document.getElementById('btn-add-to-cart');
+        if (addBtn) addBtn.click();
+      }
+    });
+  }
+
+  if (btnBack) {
+    btnBack.addEventListener('click', function () {
+      if (currentStep > 1) {
+        setStep(currentStep - 1);
+        window.scrollTo({ top: document.querySelector('.builder-wrap').offsetTop - 100, behavior: 'smooth' });
+      }
+    });
+  }
+
+  // initialise first step
+  setStep(1);
+})();
+</script>
+</body>
+</html>

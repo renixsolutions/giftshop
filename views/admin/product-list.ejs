@@ -1,0 +1,532 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout">
+    <%- include('../partials/admin-sidebar', { currentPage: 'products' }) %>
+    
+    <div class="admin-main">
+        <%- include('../partials/admin-header', { pageTitle: 'Manage Products' }) %>
+        
+        <div class="admin-content">
+            <% if (typeof flash !== 'undefined' && flash) { %>
+                <div class="alert alert-<%= flash.type === 'error' ? 'danger' : 'success' %> alert-dismissible fade show" role="alert">
+                    <%= flash.message %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <% } %>
+            
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+                <h2 class="mb-0">Products</h2>
+                <a href="/admin/products/new" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> <span class="d-none d-sm-inline">Add New Product</span><span class="d-sm-none">Add</span>
+                </a>
+            </div>
+            
+            <!-- Desktop Table View -->
+            <div class="admin-table d-none d-md-block">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Image</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th class="d-none d-lg-table-cell">QR Code</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (products && products.length > 0) { %>
+                                <% products.forEach(product => { %>
+                                    <tr>
+                                        <td><strong>#<%= product.id %></strong></td>
+                                        <td>
+                                            <img src="<%= product.image || '' %>" alt="<%= product.title %>" 
+                                                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" 
+                                                 onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+Tm8gSW1hZ2UgQXZhaWxhYmxlPC90ZXh0Pjwvc3ZnPg==';">
+                                        </td>
+                                        <td>
+                                            <strong><%= product.title %></strong>
+                                            <br>
+                                            <small class="text-muted"><%= product.description ? product.description.substring(0, 50) + '...' : '' %></small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary"><%= product.category || 'N/A' %></span>
+                                        </td>
+                                        <td>
+                                            <strong>₹<%= product.price.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-<%= product.stock > 10 ? 'success' : product.stock > 0 ? 'warning' : 'danger' %>">
+                                                <%= product.stock %> units
+                                            </span>
+                                        </td>
+                                        <td class="d-none d-lg-table-cell">
+                                            <% if (product.qr_code) { %>
+                                                <div style="display: flex; align-items: center; justify-content: center;">
+                                                    <% if (product.qr_code_image) { %>
+                                                        <img src="<%= product.qr_code_image %>" alt="QR Code" style="width: 60px; height: 60px; object-fit: contain; border: 1px solid #ddd; padding: 4px; background: white; border-radius: 4px;" title="QR Code">
+                                                    <% } else { %>
+                                                        <div class="qr-code-placeholder" data-qr-code="<%= product.qr_code %>" style="width: 60px; height: 60px; border: 1px solid #ddd; padding: 4px; background: white; border-radius: 4px; display: flex; align-items: center; justify-content: center;" title="QR Code">
+                                                            <i class="bi bi-qr-code-scan" style="font-size: 1.5rem; color: #666;"></i>
+                                                        </div>
+                                                    <% } %>
+                                                </div>
+                                            <% } else { %>
+                                                <span class="text-muted" style="font-size: 0.85rem;">Not generated</span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="/admin/products/<%= product.id %>" class="btn btn-sm btn-primary" title="View">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="/admin/products/<%= product.id %>/edit" class="btn btn-sm btn-warning" title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <% if (product.qr_code) { %>
+                                                    <% const qrCodeNum = product.qrCodeNumber || product.qr_code; %>
+                                                    <button type="button" class="btn btn-sm btn-info" onclick="printQRCode('<%= product.qr_code %>', '<%= product.title %>', '<%= product.category %>', '<%= product.price %>', '<%= product.id %>', '<%= product.image || "" %>')" title="Print QR Code Sticker">
+                                                        <i class="bi bi-printer"></i>
+                                                    </button>
+                                                <% } %>
+                                                <form action="/admin/products/<%= product.id %>/delete" method="POST" class="d-inline" 
+                                                      onsubmit="return confirm('Are you sure you want to delete this product?');" style="display: inline-block;">
+                                                    <%- include('../partials/csrf-token') %>
+                                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete" style="border-radius: 0.25rem;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="8" class="text-center py-5">
+                                        <i class="bi bi-inbox" style="font-size: 3rem; color: #ddd;"></i>
+                                        <p class="text-muted mt-3">No products found. <a href="/admin/products/new">Add your first product</a></p>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Mobile Card View -->
+            <div class="d-md-none">
+                <% if (products && products.length > 0) { %>
+                    <% products.forEach(product => { %>
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-4">
+                                        <img src="<%= product.image || '' %>" alt="<%= product.title %>" 
+                                             class="img-fluid rounded" 
+                                             style="width: 100%; height: 120px; object-fit: cover;"
+                                             onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+Tm8gSW1hZ2UgQXZhaWxhYmxlPC90ZXh0Pjwvc3ZnPg==';">
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <h6 class="mb-1 fw-bold"><%= product.title %></h6>
+                                                <small class="text-muted">ID: #<%= product.id %></small>
+                                            </div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <span class="badge bg-secondary"><%= product.category || 'N/A' %></span>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong class="text-primary">₹<%= product.price.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></strong>
+                                        </div>
+                                        <div class="mb-2">
+                                            <span class="badge bg-<%= product.stock > 10 ? 'success' : product.stock > 0 ? 'warning' : 'danger' %>">
+                                                Stock: <%= product.stock %> units
+                                            </span>
+                                        </div>
+                                        <div class="btn-group w-100" role="group">
+                                            <a href="/admin/products/<%= product.id %>" class="btn btn-sm btn-primary">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                            <a href="/admin/products/<%= product.id %>/edit" class="btn btn-sm btn-warning">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </a>
+                                            <% if (product.qr_code) { %>
+                                                <button type="button" class="btn btn-sm btn-info" onclick="printQRCode('<%= product.qr_code %>', '<%= product.title %>', '<%= product.category %>', '<%= product.price %>', '<%= product.id %>', '<%= product.image || "" %>')" title="Print QR Code">
+                                                    <i class="bi bi-printer"></i>
+                                                </button>
+                                            <% } %>
+                                            <form action="/admin/products/<%= product.id %>/delete" method="POST" class="d-inline" 
+                                                  onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                                <%- include('../partials/csrf-token') %>
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="card text-center py-5">
+                        <div class="card-body">
+                            <i class="bi bi-inbox" style="font-size: 3rem; color: #ddd;"></i>
+                            <p class="text-muted mt-3">No products found. <a href="/admin/products/new">Add your first product</a></p>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+    // Generate QR codes for placeholders
+    document.addEventListener('DOMContentLoaded', function() {
+        const placeholders = document.querySelectorAll('.qr-code-placeholder');
+        placeholders.forEach(function(placeholder) {
+            const qrCode = placeholder.getAttribute('data-qr-code');
+            if (qrCode) {
+                // Wait for QRCode library to load
+                let retryCount = 0;
+                const maxRetries = 20;
+                
+                function generateQR() {
+                    if (typeof QRCode !== 'undefined') {
+                        const canvas = document.createElement('canvas');
+                        canvas.style.width = '52px';
+                        canvas.style.height = '52px';
+                        placeholder.innerHTML = '';
+                        placeholder.appendChild(canvas);
+                        
+                        QRCode.toCanvas(canvas, qrCode, {
+                            width: 52,
+                            margin: 1,
+                            color: {
+                                dark: '#000000',
+                                light: '#FFFFFF'
+                            }
+                        }, function (error) {
+                            if (error) {
+                                placeholder.innerHTML = '<i class="bi bi-qr-code-scan" style="font-size: 1.5rem; color: #666;"></i>';
+                            }
+                        });
+                    } else if (retryCount < maxRetries) {
+                        retryCount++;
+                        setTimeout(generateQR, 200);
+                    }
+                }
+                
+                generateQR();
+            }
+        });
+    });
+    
+    // Print QR Code Sticker Function
+    function printQRCode(qrCode, title, category, price, productId, image) {
+        const shopName = 'SHUBHAM GARMENTS';
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>QR Code Sticker - ${title}</title>
+                <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"><\/script>
+                <style>
+                    * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
+                    body {
+                        font-family: 'Arial', 'Helvetica', sans-serif;
+                        padding: 10px;
+                        background: #f5f5f5;
+                    }
+                    .sticker-container {
+                        width: 3.5in;
+                        height: 2.5in;
+                        border: 2px solid #000;
+                        padding: 12px;
+                        margin: 5px;
+                        display: inline-block;
+                        vertical-align: top;
+                        page-break-inside: avoid;
+                        background: white;
+                    }
+                    .shop-name {
+                        text-align: center;
+                        font-size: 16px;
+                        font-weight: bold;
+                        margin-bottom: 10px;
+                        border-bottom: 2px solid #000;
+                        padding-bottom: 6px;
+                        letter-spacing: 0.5px;
+                    }
+                    .product-details {
+                        display: flex;
+                        gap: 12px;
+                        align-items: flex-start;
+                    }
+                    .product-image-section {
+                        flex-shrink: 0;
+                        width: 80px;
+                        height: 80px;
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                        overflow: hidden;
+                        background: #f5f5f5;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    .product-image-section img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+                    .product-info {
+                        flex: 1;
+                        font-size: 11px;
+                        line-height: 1.4;
+                    }
+                    .product-info .product-title {
+                        font-weight: bold;
+                        margin-bottom: 6px;
+                        font-size: 13px;
+                        color: #000;
+                        word-wrap: break-word;
+                    }
+                    .product-info .product-category {
+                        color: #333;
+                        margin-bottom: 4px;
+                        font-size: 11px;
+                    }
+                    .product-info .product-price {
+                        font-weight: bold;
+                        color: #d32f2f;
+                        font-size: 14px;
+                        margin: 6px 0;
+                    }
+                    .product-info .product-id {
+                        font-size: 10px;
+                        color: #666;
+                        margin-top: 4px;
+                    }
+                    .qr-code-section {
+                        text-align: center;
+                        flex-shrink: 0;
+                    }
+                    .qr-code-section canvas {
+                        width: 100px !important;
+                        height: 100px !important;
+                        display: block;
+                        margin: 0 auto;
+                        border: 1px solid #ddd;
+                        padding: 4px;
+                        background: white;
+                    }
+                    .loading-text {
+                        text-align: center;
+                        color: #666;
+                        font-size: 10px;
+                        padding: 20px;
+                    }
+                    @media print {
+                        body { 
+                            margin: 0; 
+                            padding: 0;
+                            background: white;
+                        }
+                        .sticker-container { 
+                            page-break-inside: avoid;
+                            margin: 0;
+                            border: 2px solid #000;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="sticker-container">
+                    <div class="shop-name">${shopName}</div>
+                    <div class="product-details">
+                        <div id="productImageContainer" class="product-image-section" style="display: none;">
+                            <img id="productImage" src="" alt="${title}" onerror="document.getElementById('productImageContainer').style.display='none';">
+                        </div>
+                        <div class="product-info">
+                            <div class="product-title">${title}</div>
+                            <div class="product-category"><strong>Category:</strong> ${category}</div>
+                            <div class="product-price">₹${parseFloat(price).toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                            <div class="product-id"><strong>ID:</strong> #${productId}</div>
+                        </div>
+                        <div class="qr-code-section">
+                            <div id="loadingText" class="loading-text">Generating QR Code...</div>
+                            <canvas id="qrcode" style="display: none;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    // Set product image if provided
+                    const productImage = '${image || ""}';
+                    if (productImage && productImage.trim() !== '') {
+                        const imgContainer = document.getElementById('productImageContainer');
+                        const img = document.getElementById('productImage');
+                        if (imgContainer && img) {
+                            let imageUrl = productImage;
+                            // If it's a local path, construct full URL
+                            if (imageUrl.startsWith('/')) {
+                                imageUrl = window.location.origin + imageUrl;
+                            }
+                            img.src = imageUrl;
+                            imgContainer.style.display = 'flex';
+                        }
+                    }
+                    
+                    function waitForQRCode(callback, maxAttempts = 50, attempt = 0) {
+                        if (typeof QRCode !== 'undefined') {
+                            callback();
+                        } else if (attempt < maxAttempts) {
+                            setTimeout(() => waitForQRCode(callback, maxAttempts, attempt + 1), 100);
+                        } else {
+                            const loadingText = document.getElementById('loadingText');
+                            if (loadingText) {
+                                loadingText.textContent = 'QR Code library failed to load. Please refresh.';
+                            }
+                        }
+                    }
+                    
+                    function generatePrintQRCode() {
+                        const canvas = document.getElementById('qrcode');
+                        const loadingText = document.getElementById('loadingText');
+                        
+                        if (!canvas) {
+                            if (loadingText) loadingText.textContent = 'Canvas not found';
+                            return;
+                        }
+                        
+                        const qrCodeValue = '${qrCode}';
+                        if (!qrCodeValue || qrCodeValue.trim() === '') {
+                            if (loadingText) loadingText.textContent = 'Invalid QR Code';
+                            return;
+                        }
+                        
+                        try {
+                            QRCode.toCanvas(canvas, qrCodeValue, {
+                                width: 200,
+                                margin: 2,
+                                color: {
+                                    dark: '#000000',
+                                    light: '#FFFFFF'
+                                },
+                                errorCorrectionLevel: 'M'
+                            }, function (error) {
+                                if (error) {
+                                    console.error('QR Code generation error:', error);
+                                    if (loadingText) loadingText.textContent = 'Error: ' + error.message;
+                                } else {
+                                    canvas.style.display = 'block';
+                                    if (loadingText) loadingText.style.display = 'none';
+                                    
+                                    // Wait a bit more to ensure canvas is rendered
+                                    setTimeout(function() {
+                                        window.print();
+                                    }, 500);
+                                }
+                            });
+                        } catch (e) {
+                            console.error('QR Code generation exception:', e);
+                            if (loadingText) loadingText.textContent = 'Error: ' + e.message;
+                        }
+                    }
+                    
+                    // Wait for QRCode library to load, then generate QR code
+                    waitForQRCode(generatePrintQRCode);
+                <\/script>
+                        if (typeof QRCode === 'undefined') {
+                            retryCount++;
+                            if (retryCount < maxRetries) {
+                                setTimeout(generatePrintQRCode, 100);
+                                return;
+                            } else {
+                                document.getElementById('loadingText').textContent = 'QR Code library failed to load';
+                                return;
+                            }
+                        }
+                        
+                        const canvas = document.getElementById('qrcode');
+                        const loadingText = document.getElementById('loadingText');
+                        
+                        if (!canvas) {
+                            if (loadingText) loadingText.textContent = 'Canvas not found';
+                            return;
+                        }
+                        
+                        const qrCodeValue = '${qrCode}';
+                        if (!qrCodeValue || qrCodeValue.trim() === '') {
+                            if (loadingText) loadingText.textContent = 'Invalid QR Code';
+                            return;
+                        }
+                        
+                        QRCode.toCanvas(canvas, qrCodeValue, {
+                            width: 200,
+                            margin: 2,
+                            color: {
+                                dark: '#000000',
+                                light: '#FFFFFF'
+                            },
+                            errorCorrectionLevel: 'M'
+                        }, function (error) {
+                            if (error) {
+                                console.error('QR Code generation error:', error);
+                                if (loadingText) loadingText.textContent = 'Error generating QR Code';
+                            } else {
+                                canvas.style.display = 'block';
+                                if (loadingText) loadingText.style.display = 'none';
+                                
+                                // Wait a bit more to ensure canvas is rendered
+                                setTimeout(function() {
+                                    window.print();
+                                }, 500);
+                            }
+                        });
+                    }
+                    
+                    // Wait for QRCode library to load
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', function() {
+                            setTimeout(generatePrintQRCode, 200);
+                        });
+                    } else {
+                        setTimeout(generatePrintQRCode, 200);
+                    }
+                <\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+    
+    document.getElementById('mobileSidebarToggle')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
+    });
+    
+    document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('sidebarOverlay').classList.remove('active');
+    });
+    
+    document.getElementById('sidebarOverlay')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.remove('active');
+        this.classList.remove('active');
+    });
+</script>
+</body>
+</html>

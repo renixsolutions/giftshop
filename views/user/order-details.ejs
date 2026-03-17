@@ -1,0 +1,477 @@
+<%- include('../partials/header-gift') %>
+<%- include('../partials/navbar-gift', { 
+  currentPage: 'orders',
+  cartCount: typeof cartCount !== 'undefined' ? cartCount : 0,
+  userId: typeof userId !== 'undefined' ? userId : null 
+}) %>
+
+<style>
+    .order-item-card {
+        transition: all 0.3s ease;
+    }
+    .order-item-card:hover {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 12px;
+        margin-left: -12px;
+        margin-right: -12px;
+    }
+    .feedback-section {
+        border-top: 1px solid #e9ecef;
+        padding-top: 20px;
+    }
+    .existing-review {
+        background: linear-gradient(135deg, rgba(211,47,47,0.05) 0%, rgba(212,175,55,0.05) 100%);
+        border: 1px solid rgba(211,47,47,0.1);
+    }
+    .star-rating {
+        font-size: 1.1rem;
+    }
+    .star-rating-input {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 5px;
+    }
+    .star-rating-input input[type="radio"] {
+        display: none;
+    }
+    .star-rating-input .star-label {
+        cursor: pointer;
+        font-size: 1.8rem;
+        color: #ddd;
+        transition: color 0.2s;
+    }
+    .star-rating-input .star-label:hover,
+    .star-rating-input .star-label:hover ~ .star-label {
+        color: #ffc107;
+    }
+    .star-rating-input input[type="radio"]:checked ~ .star-label,
+    .star-rating-input input[type="radio"]:checked + .star-label {
+        color: #ffc107;
+    }
+    .review-form {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    .review-form h6 {
+        color: var(--veera-black);
+        font-weight: 600;
+    }
+    /* Order Status Timeline Styles */
+    .order-status-timeline {
+        padding: 10px 0;
+    }
+    .status-timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    .status-item {
+        position: relative;
+        padding-bottom: 20px;
+        display: flex;
+        align-items: flex-start;
+    }
+    .status-item:last-child {
+        padding-bottom: 0;
+    }
+    .status-item:last-child .status-line {
+        display: none;
+    }
+    .status-dot {
+        position: absolute;
+        left: -30px;
+        top: 3px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: #dee2e6;
+        border: 2px solid #fff;
+        z-index: 2;
+        transition: all 0.3s ease;
+    }
+    .status-item.active .status-dot {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+    }
+    .status-item.current .status-dot {
+        background-color: #198754;
+        border-color: #198754;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.2);
+        width: 14px;
+        height: 14px;
+        left: -31px;
+        top: 2px;
+    }
+    .status-item.cancelled .status-dot {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2);
+    }
+    .status-line {
+        position: absolute;
+        left: -25px;
+        top: 15px;
+        width: 2px;
+        height: calc(100% - 5px);
+        background-color: #dee2e6;
+        z-index: 1;
+    }
+    .status-item.active .status-line {
+        background-color: #0d6efd;
+    }
+    .status-item.current .status-line {
+        background-color: #198754;
+    }
+    .status-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    .status-item.active .status-label {
+        color: #495057;
+        font-weight: 600;
+    }
+    .status-item.current .status-label {
+        color: #198754;
+        font-weight: 700;
+    }
+    .status-item.cancelled .status-label {
+        color: #dc3545;
+        font-weight: 700;
+    }
+    
+    @media (max-width: 768px) {
+        .star-rating-input .star-label {
+            font-size: 1.5rem;
+        }
+        .review-form {
+            padding: 15px;
+        }
+        .status-timeline {
+            padding-left: 25px;
+        }
+        .status-dot {
+            left: -25px;
+            width: 10px;
+            height: 10px;
+        }
+        .status-item.current .status-dot {
+            width: 12px;
+            height: 12px;
+            left: -26px;
+        }
+        .status-line {
+            left: -21px;
+        }
+        .status-label {
+            font-size: 0.85rem;
+        }
+    }
+</style>
+
+<div class="container mt-4 mb-5" style="max-width:1120px;padding:0 24px;">
+    <% if (typeof flash !== 'undefined' && flash) { %>
+        <div class="alert alert-<%= flash.type === 'error' ? 'danger' : 'success' %> alert-dismissible fade show" role="alert">
+            <%= flash.message %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <% } %>
+    
+    <h1 class="mb-4">Order Details</h1>
+    
+    <div class="row g-4">
+        <div class="col-md-8 order-items-col">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-1">Order #<%= order.id %></h5>
+                    <p class="mb-0 text-muted small">
+                        Placed on <%= new Date(order.created_at).toLocaleDateString() %>
+                    </p>
+                </div>
+                <div class="card-body">
+                    <h6 class="mb-3">Order Items</h6>
+                    <% if (orderItems && orderItems.length > 0) { %>
+                        <% orderItems.forEach(item => { %>
+                            <div class="order-item-card mb-4 pb-4 border-bottom">
+                                <div class="row align-items-center mb-3 g-3">
+                                    <div class="col-md-2 col-4">
+                                        <img src="<%= item.image || '' %>" alt="<%= item.title %>" class="img-fluid rounded" style="width: 100%; max-width: 80px; height: 80px; object-fit: cover;" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+Tm8gSW1hZ2UgQXZhaWxhYmxlPC90ZXh0Pjwvc3ZnPg==';">
+                                    </div>
+                                    <div class="col-md-6 col-8">
+                                        <h6 class="mb-1"><%= item.title %></h6>
+                                        <p class="text-muted mb-0 small">Quantity: <%= item.quantity %></p>
+                                    </div>
+                                    <div class="col-md-4 col-12 text-start text-md-end">
+                                        <strong class="text-primary">₹<%= (item.unit_price * item.quantity).toLocaleString('en-IN', {minimumFractionDigits: 2}) %></strong>
+                                    </div>
+                                </div>
+                                
+                                <!-- Feedback & Rating Section -->
+                                <div class="feedback-section mt-3">
+                                    <% if (item.hasReview && item.review) { %>
+                                        <!-- Existing Review Display -->
+                                        <div class="existing-review p-3 bg-light rounded">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <strong>Your Review</strong>
+                                                    <div class="star-rating mt-1">
+                                                        <% for (let i = 1; i <= 5; i++) { %>
+                                                            <i class="bi bi-star<%= i <= item.review.rating ? '-fill' : '' %> text-warning"></i>
+                                                        <% } %>
+                                                        <span class="ms-2 text-muted">(<%= item.review.rating %> out of 5)</span>
+                                                    </div>
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-primary edit-review-btn" data-item-id="<%= item.product_id %>">
+                                                    <i class="bi bi-pencil"></i> Edit
+                                                </button>
+                                            </div>
+                                            <% if (item.review.message) { %>
+                                                <p class="mb-0 mt-2"><%= item.review.message %></p>
+                                            <% } %>
+                                            <small class="text-muted">Reviewed on <%= new Date(item.review.created_at).toLocaleDateString() %></small>
+                                        </div>
+                                        
+                                        <!-- Edit Review Form (Hidden by default) -->
+                                        <div class="review-form mt-3" id="review-form-<%= item.product_id %>" style="display: none;">
+                                            <h6 class="mb-3">Edit Your Review</h6>
+                                            <form action="/products/<%= item.product_id %>/review" method="POST" class="review-form-inner">
+                                                <%- include('../partials/csrf-token') %>
+                                                <input type="hidden" name="productId" value="<%= item.product_id %>">
+                                                <input type="hidden" name="orderId" value="<%= order.id %>">
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold">Rating</label>
+                                                    <div class="star-rating-input mb-2">
+                                                        <% for (let i = 5; i >= 1; i--) { %>
+                                                            <input type="radio" name="rating" id="rating-<%= item.product_id %>-<%= i %>" value="<%= i %>" <%= item.review.rating === i ? 'checked' : '' %> required>
+                                                            <label for="rating-<%= item.product_id %>-<%= i %>" class="star-label">
+                                                                <i class="bi bi-star-fill"></i>
+                                                            </label>
+                                                        <% } %>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label for="message-<%= item.product_id %>" class="form-label fw-semibold">Your Feedback</label>
+                                                    <textarea class="form-control" id="message-<%= item.product_id %>" name="message" rows="3" placeholder="Share your experience with this product..."><%= item.review.message || '' %></textarea>
+                                                </div>
+                                                
+                                                <div class="d-flex gap-2">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="bi bi-check-circle"></i> Update Review
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-secondary cancel-edit-btn" data-item-id="<%= item.product_id %>">
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    <% } else { %>
+                                        <!-- New Review Form -->
+                                        <div class="review-form">
+                                            <h6 class="mb-3">
+                                                <i class="bi bi-star"></i> Rate & Review This Product
+                                            </h6>
+                                            <form action="/products/<%= item.product_id %>/review" method="POST" class="review-form-inner">
+                                                <%- include('../partials/csrf-token') %>
+                                                <input type="hidden" name="productId" value="<%= item.product_id %>">
+                                                <input type="hidden" name="orderId" value="<%= order.id %>">
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold">Rating <span class="text-danger">*</span></label>
+                                                    <div class="star-rating-input mb-2">
+                                                        <% for (let i = 5; i >= 1; i--) { %>
+                                                            <input type="radio" name="rating" id="rating-<%= item.product_id %>-<%= i %>" value="<%= i %>" required>
+                                                            <label for="rating-<%= item.product_id %>-<%= i %>" class="star-label">
+                                                                <i class="bi bi-star"></i>
+                                                            </label>
+                                                        <% } %>
+                                                    </div>
+                                                    <small class="text-muted">Click on a star to rate</small>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label for="message-<%= item.product_id %>" class="form-label fw-semibold">Your Feedback</label>
+                                                    <textarea class="form-control" id="message-<%= item.product_id %>" name="message" rows="3" placeholder="Share your experience with this product... (Optional)"></textarea>
+                                                </div>
+                                                
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="bi bi-star-fill"></i> Submit Review
+                                                </button>
+                                            </form>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 order-summary-col">
+            <div class="card shadow-sm border-0" style="position: sticky; top: 20px;">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Order Summary</h5>
+                    <hr>
+                    
+                    <!-- Order Status Timeline -->
+                    <div class="order-status-timeline mb-3">
+                        <h6 class="fw-semibold mb-3">Order Status</h6>
+                        <div class="status-timeline">
+                            <!-- Pending -->
+                            <div class="status-item <%= order.status === 'pending' || order.status === 'processing' || order.status === 'shipped' || order.status === 'delivered' ? 'active' : '' %> <%= order.status === 'pending' ? 'current' : '' %>">
+                                <div class="status-dot"></div>
+                                <div class="status-line"></div>
+                                <div class="status-label">Pending</div>
+                            </div>
+                            
+                            <!-- Placed (Processing) -->
+                            <div class="status-item <%= order.status === 'processing' || order.status === 'shipped' || order.status === 'delivered' ? 'active' : '' %> <%= order.status === 'processing' ? 'current' : '' %>">
+                                <div class="status-dot"></div>
+                                <div class="status-line"></div>
+                                <div class="status-label">Placed</div>
+                            </div>
+                            
+                            <!-- Shipped -->
+                            <div class="status-item <%= order.status === 'shipped' || order.status === 'delivered' ? 'active' : '' %> <%= order.status === 'shipped' ? 'current' : '' %>">
+                                <div class="status-dot"></div>
+                                <div class="status-line"></div>
+                                <div class="status-label">Shipped</div>
+                            </div>
+                            
+                            <!-- Delivered -->
+                            <div class="status-item <%= order.status === 'delivered' ? 'active' : '' %> <%= order.status === 'delivered' ? 'current' : '' %>">
+                                <div class="status-dot"></div>
+                                <div class="status-label">Delivered</div>
+                            </div>
+                            
+                            <!-- Cancelled (if applicable) -->
+                            <% if (order.status === 'cancelled') { %>
+                                <div class="status-item cancelled current">
+                                    <div class="status-dot"></div>
+                                    <div class="status-label">Cancelled</div>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                    <hr>
+                    <% if (order.customer_name || order.shipping_address) { %>
+                        <div class="mb-3">
+                            <h6 class="fw-semibold mb-2"><i class="bi bi-geo-alt"></i> Shipping Address</h6>
+                            <div class="small text-muted">
+                                <% if (order.customer_name) { %>
+                                    <strong><%= order.customer_name %></strong><br>
+                                <% } %>
+                                <% if (order.customer_phone) { %>
+                                    <i class="bi bi-telephone"></i> <%= order.customer_phone %><br>
+                                <% } %>
+                                <% if (order.shipping_address) { %>
+                                    <%= order.shipping_address %><br>
+                                <% } %>
+                                <% if (order.city || order.state || order.pincode) { %>
+                                    <%= order.city || '' %><%= order.city && order.state ? ', ' : '' %><%= order.state || '' %>
+                                    <% if (order.pincode) { %>
+                                        - <%= order.pincode %>
+                                    <% } %>
+                                <% } %>
+                            </div>
+                        </div>
+                        <hr>
+                    <% } %>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Total:</h5>
+                        <h5 class="text-primary mb-0">₹<%= order.total_amount.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></h5>
+                    </div>
+                    <div class="alert alert-info small mb-3">
+                        <i class="bi bi-cash-coin"></i> <strong>Payment:</strong> Cash on Delivery
+                    </div>
+                    <a href="/orders" class="btn btn-outline-secondary w-100">Back to Orders</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Handle edit review button
+    document.querySelectorAll('.edit-review-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-item-id');
+            const reviewForm = document.getElementById('review-form-' + itemId);
+            if (reviewForm) {
+                reviewForm.style.display = 'block';
+                reviewForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+    });
+    
+    // Handle cancel edit button
+    document.querySelectorAll('.cancel-edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-item-id');
+            const reviewForm = document.getElementById('review-form-' + itemId);
+            if (reviewForm) {
+                reviewForm.style.display = 'none';
+            }
+        });
+    });
+    
+    // Star rating hover effect
+    document.querySelectorAll('.star-rating-input').forEach(container => {
+        const labels = container.querySelectorAll('.star-label');
+        const inputs = container.querySelectorAll('input[type="radio"]');
+        
+        labels.forEach((label, index) => {
+            label.addEventListener('mouseenter', function() {
+                const rating = 5 - index;
+                labels.forEach((l, i) => {
+                    if (5 - i <= rating) {
+                        l.style.color = '#ffc107';
+                    } else {
+                        l.style.color = '#ddd';
+                    }
+                });
+            });
+        });
+        
+        container.addEventListener('mouseleave', function() {
+            const checkedInput = container.querySelector('input[type="radio"]:checked');
+            labels.forEach((label, index) => {
+                if (checkedInput) {
+                    const checkedRating = parseInt(checkedInput.value);
+                    const labelRating = 5 - index;
+                    if (labelRating <= checkedRating) {
+                        label.style.color = '#ffc107';
+                    } else {
+                        label.style.color = '#ddd';
+                    }
+                } else {
+                    label.style.color = '#ddd';
+                }
+            });
+        });
+        
+        inputs.forEach(input => {
+            input.addEventListener('change', function() {
+                const rating = parseInt(this.value);
+                labels.forEach((label, index) => {
+                    const labelRating = 5 - index;
+                    if (labelRating <= rating) {
+                        label.style.color = '#ffc107';
+                    } else {
+                        label.style.color = '#ddd';
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+<%- include('../partials/footer-gift') %>
+

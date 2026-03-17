@@ -1,0 +1,466 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar', { userId: typeof userId !== 'undefined' ? userId : null, userName: typeof userName !== 'undefined' ? userName : null, currentPage: 'collections' }) %>
+
+<style>
+    .barcode-scanner-page {
+        min-height: 100vh;
+        background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+        padding: 15px 0;
+    }
+    .barcode-header {
+        text-align: center;
+        padding: 30px 20px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-radius: 16px;
+        margin-bottom: 25px;
+    }
+    .barcode-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--veera-black);
+        margin-bottom: 10px;
+    }
+    .barcode-header p {
+        color: #666;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+    .barcode-display {
+        text-align: center;
+        padding: 20px 15px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        margin-bottom: 25px;
+    }
+    .barcode-display h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--veera-black);
+        margin-bottom: 15px;
+    }
+    .barcode-display canvas,
+    .barcode-display img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+        border-radius: 8px;
+    }
+    .barcode-number {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--veera-black);
+        margin-top: 15px;
+        font-family: monospace;
+        letter-spacing: 1px;
+        word-break: break-all;
+        padding: 0 10px;
+    }
+    .product-barcode-details {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+    .product-barcode-image {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+        background: #f8f9fa;
+    }
+    .product-barcode-info {
+        padding: 30px;
+    }
+    .product-barcode-info h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--veera-black);
+        margin-bottom: 15px;
+        line-height: 1.3;
+    }
+    .product-barcode-info .badge {
+        font-size: 0.9rem;
+        padding: 8px 16px;
+        font-weight: 500;
+    }
+    .barcode-price-section {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        padding: 20px;
+        border-radius: 12px;
+        margin: 20px 0;
+    }
+    .barcode-price-section .current-price {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--veera-black);
+    }
+    .barcode-action-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 25px;
+    }
+    .barcode-action-buttons .btn {
+        flex: 1;
+        min-width: 150px;
+        padding: 12px 20px;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    .barcode-action-buttons form {
+        flex: 1;
+        min-width: 150px;
+    }
+    .barcode-action-buttons form .btn {
+        width: 100%;
+    }
+    
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .barcode-scanner-page {
+            padding: 10px 0;
+        }
+        .barcode-header {
+            padding: 25px 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .barcode-header h1 {
+            font-size: 1.75rem;
+            margin-bottom: 8px;
+        }
+        .barcode-header p {
+            font-size: 0.95rem;
+        }
+        .barcode-header i {
+            font-size: 1.5rem;
+        }
+        .barcode-display {
+            padding: 15px 10px;
+            margin-bottom: 20px;
+        }
+        .barcode-display h5 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
+        .barcode-display img {
+            max-width: 180px !important;
+            padding: 8px !important;
+        }
+        .barcode-number {
+            font-size: 0.85rem;
+            margin-top: 12px;
+            letter-spacing: 0.5px;
+        }
+        .product-barcode-image {
+            height: 280px;
+        }
+        .product-barcode-info {
+            padding: 20px 15px;
+        }
+        .product-barcode-info h1 {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+        }
+        .product-barcode-info .badge {
+            font-size: 0.85rem;
+            padding: 6px 12px;
+        }
+        .barcode-price-section {
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .barcode-price-section .current-price {
+            font-size: 1.75rem;
+        }
+        .barcode-action-buttons {
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .barcode-action-buttons .btn,
+        .barcode-action-buttons form,
+        .barcode-action-buttons a {
+            width: 100%;
+            min-width: 100%;
+        }
+        .product-barcode-info h6 {
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+        .product-barcode-info p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .barcode-header h1 {
+            font-size: 1.5rem;
+        }
+        .barcode-display img {
+            max-width: 150px !important;
+        }
+        .product-barcode-image {
+            height: 250px;
+        }
+        .product-barcode-info h1 {
+            font-size: 1.35rem;
+        }
+        .barcode-price-section .current-price {
+            font-size: 1.5rem;
+        }
+        .container {
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+    }
+</style>
+
+<div class="barcode-scanner-page">
+    <div class="container">
+        <% if (typeof flash !== 'undefined' && flash) { %>
+            <div class="alert alert-<%= flash.type === 'error' ? 'danger' : 'success' %> alert-dismissible fade show" role="alert">
+                <%= flash.message %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <% } %>
+        
+        <div class="barcode-header">
+            <h1><i class="bi bi-qr-code-scan"></i> Product Details</h1>
+            <p>Scanned QR Code Product Information</p>
+        </div>
+        
+        <% if (product) { %>
+            <div class="row g-4">
+                <!-- Barcode Display -->
+                <div class="col-12">
+                    <div class="barcode-display">
+                        <h5 class="mb-3">Product QR Code</h5>
+                        <% if (product.qr_code_image) { %>
+                            <img src="<%= product.qr_code_image %>" alt="QR Code" style="max-width: 200px; height: auto; display: block; margin: 0 auto; border: 1px solid #ddd; padding: 10px; background: white; border-radius: 8px;">
+                        <% } else if (product.qr_code) { %>
+                            <canvas id="qrcode" style="max-width: 200px; height: auto; display: block; margin: 0 auto; border: 1px solid #ddd; padding: 10px; background: white; border-radius: 8px;"></canvas>
+                        <% } %>
+                        <div class="barcode-number"><%= product.qrCodeNumber || product.qr_code %></div>
+                    </div>
+                </div>
+                
+                <!-- Product Image -->
+                <div class="col-md-5">
+                    <div class="product-barcode-details">
+                        <img src="<%= product.image || '' %>" alt="<%= product.title %>" class="product-barcode-image" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+Tm8gSW1hZ2UgQXZhaWxhYmxlPC90ZXh0Pjwvc3ZnPg==';">
+                    </div>
+                </div>
+                
+                <!-- Product Details -->
+                <div class="col-md-7">
+                    <div class="product-barcode-details">
+                        <div class="product-barcode-info">
+                            <span class="badge bg-secondary mb-3"><%= product.category %></span>
+                            <h1 class="mb-3" style="color: var(--veera-black); font-size: 2rem;"><%= product.title %></h1>
+                            
+                            <div class="barcode-price-section">
+                                <% if (product.original_price && product.original_price > product.price) { %>
+                                    <div class="mb-2">
+                                        <span class="text-muted text-decoration-line-through" style="font-size: 1.1rem;">
+                                            Rs. <%= product.original_price.toLocaleString('en-IN', {minimumFractionDigits: 2}) %>
+                                        </span>
+                                    </div>
+                                <% } %>
+                                <div>
+                                    <span class="current-price" style="font-size: 2rem;">Rs. <%= product.price.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></span>
+                                    <% if (product.discount_percentage && product.discount_percentage > 0) { %>
+                                        <span class="badge bg-success ms-2" style="font-size: 0.9rem;">
+                                            -<%= product.discount_percentage %>% OFF
+                                        </span>
+                                    <% } %>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <span class="badge bg-<%= product.stock > 10 ? 'success' : product.stock > 0 ? 'warning' : 'danger' %> fs-6 px-3 py-2">
+                                    <i class="bi bi-<%= product.stock > 0 ? 'check-circle' : 'x-circle' %>"></i> 
+                                    <%= product.stock > 0 ? `${product.stock} in stock` : 'Out of Stock' %>
+                                </span>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6 class="mb-2">Description</h6>
+                                <p class="text-muted" style="line-height: 1.8;"><%= product.description %></p>
+                            </div>
+                            
+                            <div class="barcode-action-buttons">
+                                <% if (product.stock > 0) { %>
+                                    <% if (typeof userId !== 'undefined' && userId) { %>
+                                        <form action="/cart/add" method="POST" class="flex-grow-1">
+                                            <%- include('../partials/csrf-token') %>
+                                            <input type="hidden" name="productId" value="<%= product.id %>">
+                                            <input type="hidden" name="quantity" value="1">
+                                            <button type="submit" class="btn btn-gradient-modern w-100">
+                                                <i class="bi bi-cart-plus"></i> Add to Cart
+                                            </button>
+                                        </form>
+                                    <% } else { %>
+                                        <a href="/auth/login" class="btn btn-gradient-modern flex-grow-1">
+                                            <i class="bi bi-box-arrow-in-right"></i> Login to Order
+                                        </a>
+                                    <% } %>
+                                <% } else { %>
+                                    <button class="btn btn-secondary w-100" disabled>Out of Stock</button>
+                                <% } %>
+                                <a href="/products/<%= product.id %>" class="btn btn-light-modern flex-grow-1">
+                                    <i class="bi bi-eye"></i> View Full Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reviews Section -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="product-barcode-details">
+                        <div class="product-barcode-info">
+                            <h3 class="mb-4" style="font-size: 1.5rem; font-weight: 700; color: var(--veera-black);">
+                                <i class="bi bi-star-fill text-warning"></i> Customer Reviews
+                            </h3>
+                            <% if (avgRating > 0) { %>
+                                <div class="mb-4 p-3" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-radius: 12px;">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span class="text-muted">Average Rating:</span>
+                                        <strong style="font-size: 1.25rem; color: var(--veera-black);"><%= avgRating %></strong>
+                                        <span class="text-muted">/ 5.0</span>
+                                        <div class="ms-2">
+                                            <% for (let i = 1; i <= 5; i++) { %>
+                                                <i class="bi bi-star<%= i <= Math.round(avgRating) ? '-fill text-warning' : '' %>" style="font-size: 1.1rem;"></i>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% } %>
+                            
+                            <% if (typeof userId !== 'undefined' && userId) { %>
+                                <div class="card mb-4" style="border: 1px solid #e0e0e0; border-radius: 12px;">
+                                    <div class="card-body" style="padding: 20px;">
+                                        <h5 style="font-weight: 600; color: var(--veera-black); margin-bottom: 15px;">
+                                            <i class="bi bi-pencil-square"></i> Add a Review
+                                        </h5>
+                                        <form action="/products/<%= product.id %>/review" method="POST">
+                                            <%- include('../partials/csrf-token') %>
+                                            <div class="mb-3">
+                                                <label for="rating" class="form-label">Rating</label>
+                                                <select class="form-select" id="rating" name="rating" required>
+                                                    <option value="">Select Rating</option>
+                                                    <option value="5">5 - Excellent</option>
+                                                    <option value="4">4 - Very Good</option>
+                                                    <option value="3">3 - Good</option>
+                                                    <option value="2">2 - Fair</option>
+                                                    <option value="1">1 - Poor</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="message" class="form-label">Review</label>
+                                                <textarea class="form-control" id="message" name="message" rows="3"></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-gradient-modern">Submit Review</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            <% } %>
+                            
+                            <div class="reviews-list">
+                                <% if (reviews && reviews.length > 0) { %>
+                                    <% reviews.forEach(review => { %>
+                                        <div class="review-item mb-3 p-3" style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e0e0e0;">
+                                            <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
+                                                <h6 class="mb-0" style="font-weight: 600; color: var(--veera-black);">
+                                                    <i class="bi bi-person-circle"></i> <%= review.user_name %>
+                                                </h6>
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <% for (let i = 1; i <= 5; i++) { %>
+                                                        <i class="bi bi-star<%= i <= review.rating ? '-fill text-warning' : '' %>" style="font-size: 0.9rem;"></i>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                            <% if (review.message) { %>
+                                                <p class="mb-2" style="color: #555; line-height: 1.6; font-size: 0.95rem;"><%= review.message %></p>
+                                            <% } %>
+                                            <small class="text-muted" style="font-size: 0.85rem;">
+                                                <i class="bi bi-calendar3"></i> <%= new Date(review.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                                            </small>
+                                        </div>
+                                    <% }); %>
+                                <% } else { %>
+                                    <div class="text-center p-4 text-muted" style="background: #f8f9fa; border-radius: 12px; border: 1px dashed #ddd;">
+                                        <i class="bi bi-chat-dots" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+                                        <p class="mb-0">No reviews yet. Be the first to review!</p>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } else { %>
+            <div class="alert alert-danger text-center p-4" style="border-radius: 16px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                <i class="bi bi-exclamation-triangle" style="font-size: 3rem; color: #dc3545;"></i>
+                <h4 class="mt-3 mb-2" style="font-weight: 700; color: var(--veera-black);">Product Not Found</h4>
+                <p class="mb-3" style="color: #666;">The QR code you scanned does not match any product in our system.</p>
+                <a href="/" class="btn btn-gradient-modern mt-2">
+                    <i class="bi bi-house-door"></i> Go to Homepage
+                </a>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+    <% if (product && product.qr_code && !product.qr_code_image) { %>
+        (function() {
+            const canvas = document.getElementById('qrcode');
+            if (!canvas) return;
+            
+            // Wait for QRCode library to load
+            let retryCount = 0;
+            const maxRetries = 20;
+            
+            function generateQR() {
+                if (typeof QRCode !== 'undefined') {
+                    try {
+                        const size = window.innerWidth < 480 ? 150 : 200;
+                        QRCode.toCanvas(canvas, '<%= product.qr_code %>', {
+                            width: size,
+                            margin: 2,
+                            color: {
+                                dark: '#000000',
+                                light: '#FFFFFF'
+                            }
+                        }, function (error) {
+                            if (error) console.error('QR Code generation error:', error);
+                        });
+                    } catch (error) {
+                        console.error('QR Code error:', error);
+                    }
+                } else if (retryCount < maxRetries) {
+                    retryCount++;
+                    setTimeout(generateQR, 200);
+                }
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', generateQR);
+            } else {
+                generateQR();
+            }
+        })();
+    <% } %>
+</script>
+
+<%- include('../partials/footer') %>
+

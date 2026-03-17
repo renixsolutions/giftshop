@@ -1,0 +1,1077 @@
+<%- include('../partials/header-gift') %>
+<%- include('../partials/navbar-gift', { 
+  currentPage: 'catalog',
+  cartCount: typeof cartCount !== 'undefined' ? cartCount : 0,
+  userId: typeof userId !== 'undefined' ? userId : null 
+}) %>
+
+<div class="pd-hero">
+    <div class="pd-hero-inner">
+        <div>
+            <div class="pd-breadcrumb">
+                <a href="/">Home</a>
+                <span>›</span>
+                <a href="/collections">Collections</a>
+                <span>›</span>
+                <span><%= product.title %></span>
+            </div>
+            <h1 class="pd-title"><%= product.title %></h1>
+            <p class="pd-sub">
+                Thoughtfully curated gift, beautifully packed and ready to delight.
+            </p>
+            <% if (avgRating && avgRating > 0) { %>
+            <div class="pd-hero-rating">
+                <div class="pd-hero-stars">
+                    <% for (let i = 1; i <= 5; i++) { %>
+                        <span class="pd-star <%= i <= Math.round(avgRating) ? 'pd-star--on' : '' %>">★</span>
+                    <% } %>
+                </div>
+                <div class="pd-hero-rating-meta">
+                    <span class="pd-hero-rating-val"><%= avgRating %></span>
+                    <span class="pd-hero-rating-text">· <%= totalRatings || 0 %> <%= totalRatings === 1 ? 'review' : 'reviews' %></span>
+                </div>
+            </div>
+            <% } %>
+        </div>
+        <div class="pd-meta-pill">
+            <span class="pd-meta-label">Price</span>
+            <span class="pd-meta-value">
+                Rs. <%= product.price.toLocaleString('en-IN', {minimumFractionDigits: 2}) %>
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="pd-shell">
+    <% if (typeof flash !== 'undefined' && flash) { %>
+        <div class="alert alert-<%= flash.type === 'error' ? 'danger' : 'success' %> alert-dismissible fade show" role="alert">
+            <%= flash.message %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <% } %>
+
+    <div class="pd-main">
+        <div class="pd-left">
+            <div class="pd-image-card">
+                <img
+                    src="<%= product.image || '' %>"
+                    alt="<%= product.title %>"
+                    class="pd-image"
+                    onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+Tm8gSW1hZ2UgQXZhaWxhYmxlPC90ZXh0Pjwvc3ZnPg==';"
+                >
+            </div>
+            
+            <% if (galleryImages && galleryImages.length > 0) { %>
+            <div class="pd-thumbs">
+                <% galleryImages.forEach(function(img) { %>
+                    <button type="button" class="pd-thumb" onclick="document.querySelector('.pd-image').src='<%= img.image_url %>'">
+                        <img src="<%= img.image_url %>" alt="" onerror="this.style.display='none'">
+                    </button>
+                <% }); %>
+            </div>
+            <% } %>
+        </div>
+
+        <div class="pd-right">
+            <div class="pd-summary-card">
+                    <div class="pd-tags-row mb-3">
+                        <% if (product.category) { %>
+                            <span class="pd-tag pd-tag--category"><%= product.category %></span>
+                        <% } %>
+                        <% if (productOccasions && productOccasions.length) { %>
+                            <% productOccasions.forEach(function(occ){ %>
+                                <span class="pd-tag pd-tag--occasion"><%= occ.name %></span>
+                            <% }); %>
+                        <% } else if (product.occasion) { %>
+                            <span class="pd-tag pd-tag--occasion"><%= product.occasion %></span>
+                        <% } %>
+                    </div>
+                    <h2 class="pd-summary-title"><%= product.title %></h2>
+                    
+                    <div class="price-section mb-4 pd-price-row">
+                        <% if (product.original_price && product.original_price > product.price) { %>
+                            <span class="original-price">Rs. <%= product.original_price.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></span>
+                        <% } %>
+                        <div class="mt-2">
+                            <span class="current-price">Rs. <%= product.price.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></span>
+                            <% if (product.discount_percentage && product.discount_percentage > 0) { %>
+                                <span class="discount-badge"><%= product.discount_percentage %>% OFF</span>
+                            <% } %>
+                        </div>
+                    </div>
+                    
+                    <!-- Rating Display -->
+                    <div class="mb-4">
+                        <% if (avgRating > 0) { %>
+                            <div class="pd-rating-card">
+                                <div>
+                                    <div class="pd-rating-num"><%= avgRating %></div>
+                                    <div class="pd-rating-denom">out of 5</div>
+                                </div>
+                                <div class="pd-rating-info">
+                                    <div class="pd-rating-mini-stars">
+                                        <% for (let i = 1; i <= 5; i++) { %>
+                                            <span class="<%= i <= Math.round(avgRating) ? 'on' : '' %>">★</span>
+                                        <% } %>
+                                    </div>
+                                    <p>Based on <%= totalRatings || 0 %> <%= totalRatings === 1 ? 'rating' : 'ratings' %></p>
+                                </div>
+                            </div>
+                        <% } else { %>
+                            <div class="no-rating-message">
+                                <p class="text-muted mb-0">
+                                    <i class="bi bi-info-circle"></i> No ratings yet. Be the first to review this product!
+                                </p>
+                            </div>
+                        <% } %>
+                    </div>
+                    
+                    <div class="mb-4 pd-stock-info">
+                        <span class="pd-stock-dot <%= product.stock > 0 ? 'on' : '' %>"></span>
+                        <span>
+                            <%= product.stock > 0 ? `${product.stock} in stock – order soon` : 'Currently out of stock' %>
+                        </span>
+                    </div>
+                    
+                    <div class="mb-4 pd-desc">
+                        <h6>What’s inside</h6>
+                        <p class="text-muted"><%= product.description %></p>
+                    </div>
+                    
+                    <% /* QR code section removed as per latest requirement */ %>
+                    
+                    <% if (product.stock > 0) { %>
+                        <% if (typeof userId !== 'undefined' && userId) { %>
+                            <form action="/cart/add" method="POST" class="mb-4" id="addToCartForm">
+                                <%- include('../partials/csrf-token') %>
+                                <input type="hidden" name="productId" value="<%= product.id %>">
+                                <input type="hidden" name="quantity" value="1" id="quantityInput">
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold mb-2">Quantity</label>
+                                    <div class="quantity-controls">
+                                        <button type="button" class="quantity-btn" onclick="decreaseQuantity(<%= product.stock %>)">
+                                            <i class="bi bi-dash"></i>
+                                        </button>
+                                        <input type="number" class="quantity-display" value="1" min="1" max="<%= product.stock %>" id="quantityDisplay" readonly>
+                                        <button type="button" class="quantity-btn" onclick="increaseQuantity(<%= product.stock %>)">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-gradient-modern btn-lg w-100 py-3 pd-add-btn">
+                                        <i class="bi bi-cart-plus"></i> Add to Cart
+                                    </button>
+                                </div>
+                            </form>
+                        <% } else { %>
+                            <div class="alert alert-info mb-3">
+                                <i class="bi bi-info-circle"></i> Please <a href="#" class="js-open-auth-login" style="color: var(--veera-red); font-weight: 600;">login</a> or <a href="#" class="js-open-auth-register" style="color: var(--veera-red); font-weight: 600;">create an account</a> to add items to cart and place orders.
+                            </div>
+                            <a href="#" class="pd-login-btn js-open-auth-login">
+                                <i class="bi bi-box-arrow-in-right"></i> Login to Order
+                            </a>
+                        <% } %>
+                    <% } else { %>
+                        <button class="btn btn-secondary btn-lg w-100 py-3" disabled>Out of Stock</button>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="reviews-section-header mb-4">
+                <h3 class="reviews-title">
+                    Customer Reviews
+                </h3>
+                <% if (avgRating > 0) { %>
+                    <div class="rating-summary-card">
+                        <div class="d-flex align-items-center flex-wrap gap-3">
+                            <div class="rating-display">
+                                <div class="rating-number"><%= avgRating %></div>
+                                <div class="rating-out-of">out of 5</div>
+                            </div>
+                            <div class="rating-stars">
+                                <% for (let i = 1; i <= 5; i++) { %>
+                                    <i class="bi bi-star<%= i <= Math.round(avgRating) ? '-fill' : '' %> <%= i <= Math.round(avgRating) ? 'text-warning' : 'text-muted' %>"></i>
+                                <% } %>
+                            </div>
+                            <div class="rating-count">
+                                <span>Based on <strong><%= totalRatings || 0 %></strong> <%= totalRatings === 1 ? 'review' : 'reviews' %></span>
+                            </div>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <div class="no-rating-message">
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-info-circle"></i> No reviews yet. Be the first to review this product!
+                        </p>
+                    </div>
+                <% } %>
+            </div>
+            
+            <% if (typeof userId !== 'undefined' && userId) { %>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5>Add a Review</h5>
+                        <form action="/products/<%= product.id %>/review" method="POST">
+                            <%- include('../partials/csrf-token') %>
+                            <div class="mb-3">
+                                <label class="form-label">Rating <span class="text-danger">*</span></label>
+                                <div class="star-rating-input mb-2">
+                                    <% for (let i = 5; i >= 1; i--) { %>
+                                        <input type="radio" name="rating" id="rating-<%= product.id %>-<%= i %>" value="<%= i %>" required>
+                                        <label for="rating-<%= product.id %>-<%= i %>" class="star-label">
+                                            <i class="bi bi-star-fill"></i>
+                                        </label>
+                                    <% } %>
+                                </div>
+                                <small class="text-muted">Click on a star to rate</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="message" class="form-label">Review</label>
+                                <textarea class="form-control" id="message" name="message" rows="3" placeholder="Share your experience with this product... (Optional)"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-gradient-modern" style="color: white !important; border: none;">
+                                <i class="bi bi-star-fill"></i> Submit Review
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            <% } %>
+            
+            <div class="reviews-list mt-4">
+                <% if (reviews && reviews.length > 0) { %>
+                    <% reviews.forEach(review => { %>
+                        <div class="review-card mb-3">
+                            <div class="review-header">
+                                <div class="reviewer-info">
+                                    <div class="reviewer-avatar">
+                                        <span><%= (review.user_name || '').charAt(0).toUpperCase() %></span>
+                                    </div>
+                                    <div class="reviewer-details">
+                                        <h6 class="reviewer-name mb-0"><%= review.user_name %></h6>
+                                        <small class="review-date text-muted">
+                                            <i class="bi bi-calendar3"></i>
+                                            <%= new Date(review.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="review-rating">
+                                    <% for (let i = 1; i <= 5; i++) { %>
+                                        <i class="bi bi-star<%= i <= review.rating ? '-fill' : '' %> <%= i <= review.rating ? 'text-warning' : 'text-muted' %>"></i>
+                                    <% } %>
+                                </div>
+                            </div>
+                            <% if (review.message) { %>
+                                <div class="review-message mt-3">
+                                    <p class="mb-0"><%= review.message %></p>
+                                </div>
+                            <% } %>
+                        </div>
+                    <% }); %>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Quantity Controls Styling for Product Details */
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        max-width: 220px;
+    }
+    .quantity-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        font-size: 1.4rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #dee2e6;
+        background: #fff;
+        color: var(--veera-text);
+        transition: all 0.2s ease;
+        cursor: pointer;
+        flex-shrink: 0;
+        padding: 0;
+    }
+    .quantity-btn:hover {
+        background: var(--veera-accent);
+        border-color: var(--veera-accent);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+    .quantity-btn:active {
+        transform: translateY(0);
+    }
+    .quantity-btn i {
+        font-size: 1.3rem;
+        line-height: 1;
+    }
+    .quantity-display {
+        flex: 1;
+        max-width: 90px;
+        min-width: 70px;
+        height: 42px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-align: center;
+        border: 2px solid #dee2e6;
+        background: #f8f9fa;
+        padding: 0.25rem 0.5rem;
+    }
+    .quantity-display:focus {
+        outline: none;
+        border-color: var(--veera-accent);
+        box-shadow: 0 0 0 0.16rem rgba(212, 165, 116, 0.25);
+    }
+</style>
+
+<script>
+    // Quantity control functions for product details page
+    function increaseQuantity(maxStock) {
+        const display = document.getElementById('quantityDisplay');
+        const input = document.getElementById('quantityInput');
+        if (display && input) {
+            let currentValue = parseInt(display.value) || 1;
+            if (currentValue < maxStock) {
+                currentValue++;
+                display.value = currentValue;
+                input.value = currentValue;
+            }
+        }
+    }
+    
+    function decreaseQuantity(maxStock) {
+        const display = document.getElementById('quantityDisplay');
+        const input = document.getElementById('quantityInput');
+        if (display && input) {
+            let currentValue = parseInt(display.value) || 1;
+            if (currentValue > 1) {
+                currentValue--;
+                display.value = currentValue;
+                input.value = currentValue;
+            }
+        }
+    }
+</script>
+
+<style>
+    .pd-add-btn{
+        border-radius:12px;
+        font-weight:600;
+        letter-spacing:.04em;
+        box-shadow:0 8px 20px rgba(28,16,8,.18);
+        border:none;
+    }
+    .pd-add-btn:hover{
+        transform:translateY(-1px);
+        box-shadow:0 10px 26px rgba(28,16,8,.24);
+    }
+
+    /* Star Rating Input Styling */
+    .star-rating-input {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    .star-rating-input input[type="radio"] {
+        display: none;
+    }
+    .star-rating-input .star-label {
+        cursor: pointer;
+        font-size: 2rem;
+        color: #ddd;
+        transition: color 0.2s ease, transform 0.1s ease;
+    }
+    .star-rating-input .star-label:hover,
+    .star-rating-input .star-label:hover ~ .star-label {
+        color: #ffc107;
+        transform: scale(1.1);
+    }
+    .star-rating-input input[type="radio"]:checked ~ .star-label,
+    .star-rating-input input[type="radio"]:checked + .star-label {
+        color: #ffc107;
+    }
+    .star-rating-input input[type="radio"]:checked ~ .star-label {
+        color: #ffc107;
+    }
+    
+    @media (max-width: 768px) {
+        .star-rating-input .star-label {
+            font-size: 1.5rem;
+        }
+        .reviews-section-header{
+            margin-top:16px;
+        }
+        .card.mb-4 .card-body{
+            padding:16px 14px;
+        }
+        .card.mb-4 textarea.form-control{
+            font-size:13px;
+            min-height:90px;
+            border-radius:10px;
+        }
+        .card.mb-4 button.btn.btn-gradient-modern{
+            width:100%;
+            border-radius:999px;
+        }
+    }
+    
+    /* Breadcrumb Styling */
+    .breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .breadcrumb-item {
+        color: var(--veera-gray);
+    }
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: "/";
+        color: var(--veera-gray);
+        padding: 0 0.5rem;
+    }
+    
+    .breadcrumb-item a {
+        color: var(--veera-accent-dark);
+        text-decoration: none !important;
+        transition: color 0.2s ease;
+    }
+    
+    .breadcrumb-item a:hover {
+        color: var(--veera-accent);
+        text-decoration: none !important;
+    }
+    
+    .breadcrumb-item.active {
+        color: var(--veera-text);
+    }
+    
+    /* Review Listing Styles */
+    .reviews-section-header {
+        margin-bottom: 1.75rem;
+    }
+    .reviews-title{
+        font-family:'Playfair Display',serif;
+        font-size:22px;
+        font-weight:700;
+        color:var(--ink);
+        margin:0 0 10px;
+    }
+    
+    .rating-summary-card {
+        background: linear-gradient(135deg, rgba(212, 165, 116, 0.1) 0%, rgba(232, 201, 163, 0.1) 100%);
+        border: 1px solid rgba(212, 165, 116, 0.2);
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .rating-display {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+    }
+    
+    .rating-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--veera-accent-dark);
+        line-height: 1;
+    }
+    
+    .rating-out-of {
+        font-size: 0.9rem;
+        color: #666;
+        font-weight: 500;
+    }
+    
+    .rating-stars {
+        display: flex;
+        gap: 2px;
+    }
+    
+    .rating-count {
+        margin-left: auto;
+        font-size: 0.9rem;
+        color:#555;
+    }
+    
+    .no-rating-message {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 3px solid var(--veera-accent);
+    }
+    
+    .reviews-list {
+        margin-top: 2rem;
+    }
+    
+    .review-card {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .review-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .reviewer-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+    }
+    
+    .reviewer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--veera-accent) 0%, var(--veera-accent-dark) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .reviewer-details {
+        flex: 1;
+    }
+    
+    .reviewer-name {
+        font-weight: 600;
+        color: var(--veera-text);
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .review-date {
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .review-date i {
+        font-size: 0.75rem;
+    }
+    
+    .review-rating {
+        display: flex;
+        gap: 2px;
+        flex-shrink: 0;
+    }
+    
+    .review-rating i {
+        font-size: 1.1rem;
+    }
+    
+    .review-message {
+        color: var(--veera-text);
+        line-height: 1.6;
+        font-size: 0.95rem;
+        padding-top: 1rem;
+        border-top: 1px solid #f0f0f0;
+    }
+    
+    .review-message p {
+        margin: 0;
+        color: #555;
+    }
+    
+    .no-reviews-card {
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 12px;
+        padding: 3rem 1rem;
+    }
+    
+    /* GiftHouse‑style detail layout */
+    .pd-hero {
+        background: var(--warm);
+        border-bottom: 1px solid var(--border);
+        padding: 28px 48px 20px;
+    }
+    .pd-hero-inner {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+    }
+    .pd-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12.5px;
+        color: var(--faint);
+        margin-bottom: 8px;
+    }
+    .pd-breadcrumb a {
+        color: var(--muted);
+        text-decoration: none;
+    }
+    .pd-breadcrumb a:hover {
+        color: var(--accent);
+    }
+    .pd-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 32px;
+        font-weight: 900;
+        color: var(--ink);
+        margin: 0 0 4px;
+        line-height: 1.1;
+    }
+    .pd-sub {
+        font-size: 14px;
+        color: var(--muted);
+        margin: 0;
+    }
+    .pd-hero-rating{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        margin-top:8px;
+        font-size:12px;
+        color:var(--muted);
+    }
+    .pd-hero-stars{
+        display:flex;
+        gap:1px;
+    }
+    .pd-star{
+        font-size:14px;
+        color:#e0d2c4;
+    }
+    .pd-star--on{
+        color:#f5b200;
+    }
+    .pd-hero-rating-val{
+        font-weight:600;
+        color:var(--ink2);
+    }
+    .pd-hero-rating-text{
+        color:var(--muted);
+    }
+    .pd-meta-pill {
+        padding: 10px 16px;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid var(--border);
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1px;
+        min-width: 140px;
+    }
+    .pd-meta-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: var(--faint);
+    }
+    .pd-meta-value {
+        font-family: 'Playfair Display', serif;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--accent);
+    }
+
+    .pd-shell {
+        max-width: 1120px;
+        margin: 24px auto 56px;
+        padding: 0 24px;
+    }
+
+    .pd-main {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+        gap: 32px;
+        align-items: flex-start;
+        margin-bottom: 40px;
+    }
+    .pd-left,
+    .pd-right {
+        min-width: 0;
+    }
+    .pd-image-card {
+        border-radius: 22px;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid var(--border);
+        box-shadow: 0 10px 30px rgba(28,16,8,.12);
+        padding: 12px;
+    }
+    .pd-image {
+        width: 100%;
+        height: 440px;
+        object-fit: cover;
+        border-radius: 18px;
+        display: block;
+    }
+    .pd-thumbs {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+    .pd-thumb {
+        width: 70px;
+        height: 70px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        padding: 0;
+        background: #fff;
+        cursor: pointer;
+    }
+    .pd-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .pd-summary-card {
+        border-radius: 22px;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(28,16,8,.08);
+        padding: 26px 28px 28px;
+        border: 1px solid var(--border);
+        position: sticky;
+        top: 96px;
+    }
+    .pd-tags-row{
+        display:flex;
+        flex-wrap:wrap;
+        gap:6px;
+    }
+    .pd-tag{
+        padding:4px 10px;
+        border-radius:999px;
+        font-size:11px;
+        font-weight:500;
+        border:1px solid var(--border);
+        background:#fff;
+        color:var(--muted);
+    }
+    .pd-tag--category{
+        background:var(--accentbg);
+        border-color:rgba(196,98,45,.35);
+        color:var(--accent);
+    }
+    .pd-tag--occasion{
+        background:#fff;
+        border-style:dashed;
+    }
+    .pd-summary-title {
+        color: var(--ink);
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        font-size: 22px;
+        margin: 4px 0 18px;
+        line-height: 1.25;
+    }
+    .pd-price-row {
+        border-top: 1px solid var(--border);
+        padding-top: 16px;
+        margin-top: 6px;
+    }
+    .pd-price-row .original-price{
+        display:block;
+        font-size:14px;
+        color:var(--muted);
+        text-decoration:line-through;
+        margin-bottom:2px;
+    }
+    .pd-price-row .current-price{
+        font-family:'Playfair Display',serif;
+        font-size:18px;
+        font-weight:700;
+        color:var(--ink);
+        margin-right:6px;
+    }
+    .pd-price-row .discount-badge{
+        background:transparent;
+        border-radius:0;
+        padding:0;
+        color:var(--muted);
+        font-size:12px;
+        font-weight:600;
+        letter-spacing:0.06em;
+    }
+    .pd-rating-card{
+        background: var(--greenbg);
+        border-radius: 10px;
+        padding: 14px 18px;
+        display:flex;
+        align-items:center;
+        gap:14px;
+        border:1px solid rgba(46,125,79,.3);
+    }
+    .pd-rating-num{
+        font-family:'Playfair Display',serif;
+        font-size:28px;
+        font-weight:700;
+        color:var(--green);
+        line-height:1;
+    }
+    .pd-rating-denom{
+        font-size:12px;
+        color:var(--green);
+        opacity:.75;
+    }
+    .pd-rating-info{
+        font-size:12px;
+        color:var(--green);
+    }
+    .pd-rating-mini-stars{
+        color:#f5b200;
+        letter-spacing:1px;
+        margin-bottom:2px;
+    }
+    .pd-rating-mini-stars span{
+        opacity:.35;
+    }
+    .pd-rating-mini-stars span.on{
+        opacity:1;
+    }
+    .pd-rating-info p{
+        margin:0;
+        font-size:12px;
+    }
+    .pd-stock-info{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        font-size:13px;
+        color:var(--muted);
+    }
+    .pd-stock-dot{
+        width:8px;
+        height:8px;
+        border-radius:50%;
+        background:#ccc;
+        flex-shrink:0;
+    }
+    .pd-stock-dot.on{
+        background:var(--green);
+    }
+    .pd-login-btn{
+        display:inline-block;
+        width:100%;
+        text-align:center;
+        padding:14px 24px;
+        border-radius:12px;
+        border:none;
+        background:var(--ink);
+        color:#fff !important;
+        font-weight:600;
+        letter-spacing:0.05em;
+        text-decoration:none;
+        box-shadow:0 4px 12px rgba(0,0,0,.18);
+        transition:background .2s, transform .1s, box-shadow .2s;
+    }
+    .pd-login-btn:hover{
+        background:var(--accent);
+        box-shadow:0 6px 18px rgba(0,0,0,.22);
+        transform:translateY(-1px);
+        color:#fff !important;
+    }
+    .pd-desc h6 {
+        font-weight: 600;
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--faint);
+        margin-bottom: 6px;
+    }
+    .pd-desc p {
+        margin: 0;
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+    @media (max-width: 992px) {
+        .pd-main {
+            grid-template-columns: 1fr;
+        }
+        .pd-summary-card {
+            position: static;
+        }
+        .pd-image {
+            height: 360px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .pd-hero {
+            padding: 20px 16px 14px;
+        }
+        .pd-hero-inner {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .pd-shell {
+            margin: 20px auto 44px;
+            padding: 0 16px;
+        }
+        .pd-image-card {
+            padding: 10px;
+            border-radius: 18px;
+        }
+        .pd-image {
+            height: 280px;
+            border-radius: 14px;
+        }
+        .pd-summary-card {
+            padding: 22px 18px 22px;
+            border-radius: 18px;
+        }
+        .pd-summary-title {
+            font-size: 20px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .rating-summary-card {
+            padding: 1rem;
+        }
+        
+        .rating-display {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .rating-number {
+            font-size: 1.75rem;
+        }
+        
+        .rating-stars i {
+            font-size: 1.2rem !important;
+        }
+        
+        .rating-count {
+            margin-left: 0;
+            margin-top: 0.5rem;
+            width: 100%;
+        }
+        
+        .review-header {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .review-rating {
+            align-self: flex-start;
+        }
+        
+        .review-card {
+            padding: 1.25rem;
+        }
+        
+        .reviewer-avatar {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+        
+        .reviewer-name {
+            font-size: 0.95rem;
+        }
+        
+        .review-message {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+
+<script>
+    // Star rating hover effect for product details page
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.star-rating-input').forEach(container => {
+            const labels = container.querySelectorAll('.star-label');
+            const inputs = container.querySelectorAll('input[type="radio"]');
+            
+            labels.forEach((label, index) => {
+                label.addEventListener('mouseenter', function() {
+                    const rating = 5 - index;
+                    labels.forEach((l, i) => {
+                        if (5 - i <= rating) {
+                            l.style.color = '#ffc107';
+                        } else {
+                            l.style.color = '#ddd';
+                        }
+                    });
+                });
+            });
+            
+            container.addEventListener('mouseleave', function() {
+                const checkedInput = container.querySelector('input[type="radio"]:checked');
+                labels.forEach((label, index) => {
+                    if (checkedInput) {
+                        const checkedRating = parseInt(checkedInput.value);
+                        const labelRating = 5 - index;
+                        if (labelRating <= checkedRating) {
+                            label.style.color = '#ffc107';
+                        } else {
+                            label.style.color = '#ddd';
+                        }
+                    } else {
+                        label.style.color = '#ddd';
+                    }
+                });
+            });
+            
+            inputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const rating = parseInt(this.value);
+                    labels.forEach((label, index) => {
+                        const labelRating = 5 - index;
+                        if (labelRating <= rating) {
+                            label.style.color = '#ffc107';
+                        } else {
+                            label.style.color = '#ddd';
+                        }
+                    });
+                });
+            });
+        });
+    });
+</script>
+
+<%- include('../partials/footer-gift') %>
+

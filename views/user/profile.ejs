@@ -1,0 +1,269 @@
+<%- include('../partials/header-gift') %>
+<%- include('../partials/navbar-gift', { 
+  currentPage: 'profile',
+  cartCount: typeof cartCount !== 'undefined' ? cartCount : 0,
+  userId: typeof userId !== 'undefined' ? userId : null 
+}) %>
+
+<style>
+    /* Profile Page Input Field Styling */
+    .profile-form .form-control {
+        border: 1px solid #dee2e6 !important;
+        border-radius: 8px;
+        padding: 0.75rem;
+        transition: all 0.2s ease;
+    }
+    
+    .profile-form .form-control:focus {
+        border-color: var(--veera-accent) !important;
+        box-shadow: 0 0 0 0.2rem rgba(212, 165, 116, 0.25);
+        outline: none;
+    }
+    
+    .profile-form .form-control[readonly] {
+        background-color: #e9ecef !important;
+        cursor: not-allowed;
+        border: 1px solid #ced4da !important;
+    }
+    
+    /* Input Group Styling */
+    .profile-form .input-group {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .profile-form .input-group-text {
+        border: 1px solid #dee2e6 !important;
+        background-color: #f8f9fa !important;
+        border-radius: 0;
+    }
+    
+    .profile-form .input-group-text:first-child {
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+        border-right: none !important;
+    }
+    
+    .profile-form .input-group-text:not(:first-child):not(:last-child) {
+        border-left: none !important;
+        border-right: none !important;
+    }
+    
+    .profile-form .input-group .form-control {
+        border-left: none !important;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+    
+    .profile-form .input-group .form-control:focus {
+        border-left: 1px solid var(--veera-accent) !important;
+        border-color: var(--veera-accent) !important;
+    }
+    
+    /* Password input group */
+    .profile-form .input-group .form-control:not([readonly]) {
+        border-left: 1px solid #dee2e6 !important;
+    }
+    
+    .profile-form .input-group .btn-outline-secondary {
+        border: 1px solid #dee2e6 !important;
+        border-left: none !important;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+    
+    .profile-form .input-group:focus-within .btn-outline-secondary {
+        border-color: var(--veera-accent) !important;
+    }
+    
+    .profile-form .input-group:focus-within .input-group-text {
+        border-color: var(--veera-accent) !important;
+    }
+</style>
+
+<div class="container mt-4 mb-5">
+    <% if (typeof flash !== 'undefined' && flash) { %>
+        <div class="alert alert-<%= flash.type === 'error' ? 'danger' : 'success' %> alert-dismissible fade show" role="alert">
+            <%= flash.message %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <% } %>
+    
+    <h1 class="mb-4"><i class="bi bi-person-circle"></i> My Profile</h1>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Profile Information -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-person"></i> Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <form action="/profile" method="POST" id="profileForm" class="profile-form">
+                        <%- include('../partials/csrf-token') %>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       value="<%= user.name || '' %>" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label fw-semibold">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="<%= user.email || '' %>" readonly>
+                                <small class="text-muted">Email cannot be changed</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="phone" class="form-label fw-semibold">Phone Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                <span class="input-group-text" style="color: var(--veera-gray); font-weight: 500;">+91</span>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       value="<%= user.phone ? user.phone.replace('+91', '') : '' %>"
+                                       readonly>
+                            </div>
+                            <small class="text-muted">Phone number cannot be changed</small>
+                        </div>
+                        
+                        <div class="d-flex gap-3 mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Update Profile
+                            </button>
+                            <a href="/" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Home
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Change Password -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-lock"></i> Change Password</h5>
+                </div>
+                <div class="card-body">
+                    <form action="/profile/password" method="POST" id="passwordForm" class="profile-form">
+                        <%- include('../partials/csrf-token') %>
+                        
+                        <div class="mb-3">
+                            <label for="currentPassword" class="form-label fw-semibold">Current Password <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('currentPassword', this)">
+                                    <i class="bi bi-eye-slash-fill" id="currentPasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label fw-semibold">New Password <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('newPassword', this)">
+                                    <i class="bi bi-eye-slash-fill" id="newPasswordIcon"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Password must be at least 6 characters long</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label fw-semibold">Confirm New Password <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirmPassword', this)">
+                                    <i class="bi bi-eye-slash-fill" id="confirmPasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-key"></i> Change Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Account Summary -->
+            <div class="card shadow-sm border-0" style="position: sticky; top: 20px;">
+                <div class="card-body">
+                    <h5 class="card-title mb-4"><i class="bi bi-info-circle"></i> Account Summary</h5>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Member Since:</span>
+                            <strong><%= new Date(user.created_at).toLocaleDateString() %></strong>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Total Orders:</span>
+                            <strong><%= orderCount %></strong>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="/orders" class="btn btn-outline-primary">
+                            <i class="bi bi-bag"></i> View My Orders
+                        </a>
+                        <a href="/cart" class="btn btn-outline-secondary">
+                            <i class="bi bi-cart"></i> View Cart
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Password visibility toggle
+    function togglePassword(inputId, button) {
+        const input = document.getElementById(inputId);
+        const icon = button.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('bi-eye-slash-fill');
+            icon.classList.add('bi-eye-fill');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('bi-eye-fill');
+            icon.classList.add('bi-eye-slash-fill');
+        }
+    }
+    
+    
+    // Password form validation
+    const passwordForm = document.getElementById('passwordForm');
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', function(e) {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                e.preventDefault();
+                alert('New password and confirm password do not match');
+                return false;
+            }
+            
+            if (newPassword.length < 6) {
+                e.preventDefault();
+                alert('Password must be at least 6 characters long');
+                return false;
+            }
+        });
+    }
+</script>
+
+<%- include('../partials/footer-gift') %>
+

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'GiftHouse — Curated Gift Boxes & Hampers' %></title>
+  <% if (typeof csrfToken !== 'undefined') { %>
+  <meta name="csrf-token" content="<%= csrfToken %>">
+  <% } %>
+  <link rel="stylesheet" href="/css/gift-house.css">
+</head>
+<body>
+
+<!-- Toast container for flash messages -->
+<div class="toast-container" id="toastContainer" style="position:fixed;bottom:90px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;"></div>
+<script>
+function showToast(message, type, duration) {
+  type = type || 'info'; duration = duration || 5000;
+  var c = document.getElementById('toastContainer');
+  if (!c) return;
+  var t = document.createElement('div');
+  t.style.cssText = 'background:#fff;border-radius:12px;padding:14px 18px;box-shadow:0 8px 24px rgba(0,0,0,.15);border-left:4px solid #C4622D;max-width:320px;';
+  if (type === 'success') t.style.borderLeftColor = '#2E7D4F';
+  if (type === 'error') t.style.borderLeftColor = '#c53030';
+  t.textContent = message;
+  c.appendChild(t);
+  if (duration > 0) setTimeout(function(){ if (t.parentNode) t.parentNode.removeChild(t); }, duration);
+}
+<% if (typeof flash !== 'undefined' && flash && flash.message) { %>
+document.addEventListener('DOMContentLoaded', function(){ showToast('<%= (flash.message || "").replace(/'/g, "\\'") %>', '<%= flash.type || "info" %>'); });
+<% } %>
+</script>
+
+<!-- Auth modal (login / signup) -->
+<div id="authModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.50);backdrop-filter:blur(4px);z-index:980;"></div>
+<div id="authModal" style="display:none;position:fixed;inset:0;z-index:985;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:22px;max-width:440px;width:100%;box-shadow:0 22px 60px rgba(0,0,0,.30);overflow:hidden;border:1px solid rgba(0,0,0,.04);">
+    <div style="padding:18px 22px;border-bottom:1px solid #f1e7dd;display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#c37a45;">Welcome</div>
+        <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:20px;color:var(--ink);">Sign in to GiftHouse</div>
+      </div>
+      <button type="button" id="authModalClose" aria-label="Close" style="border:none;background:rgba(15,12,10,0.04);width:30px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:#3b2a20;">×</button>
+    </div>
+    <div style="display:flex;border-bottom:1px solid #f1e7dd;">
+      <button type="button" id="authTabLogin" style="flex:1;padding:10px 0;border:none;background:#fff;font-size:14px;font-weight:600;border-bottom:2px solid var(--ink);cursor:pointer;transition:background .18s,color .18s;border-radius:0;">Login</button>
+      <button type="button" id="authTabRegister" style="flex:1;padding:10px 0;border:none;background:#fff;font-size:14px;font-weight:500;border-bottom:2px solid transparent;cursor:pointer;transition:background .18s,color .18s;border-radius:0;">Create Account</button>
+    </div>
+    <div style="padding:18px 22px 20px;max-height:70vh;overflow:auto;">
+      <!-- Login form -->
+      <form id="authLoginForm" action="/auth/login" method="POST">
+        <%- include('../partials/csrf-token') %>
+        <div style="margin-bottom:14px;font-size:13px;color:var(--muted);">Sign in to manage your orders, save addresses and track your hampers.</div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:13px;font-weight:500;color:var(--ink2);">Email</label>
+          <input type="email" name="email" required autocomplete="email" placeholder="you@example.com" style="width:100%;padding:9px 11px;border-radius:11px;border:1px solid var(--border2);font-size:13px;outline:none;">
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:13px;font-weight:500;color:var(--ink2);">Password</label>
+          <input type="password" name="password" required minlength="6" autocomplete="current-password" placeholder="Enter your password" style="width:100%;padding:9px 11px;border-radius:11px;border:1px solid var(--border2);font-size:13px;outline:none;">
+          <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);">
+            <span>Minimum 6 characters</span>
+            <a href="/forgot-password" style="color:var(--ink);text-decoration:none;font-weight:500;">Forgot?</a>
+          </div>
+        </div>
+        <button type="submit" style="width:100%;padding:11px 0;border:none;border-radius:999px;background:var(--ink);color:#fff;font-weight:600;font-size:14px;cursor:pointer;box-shadow:0 10px 26px rgba(0,0,0,.18);">Login</button>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center;">
+          New to GiftHouse?
+          <button type="button" style="border:none;background:none;color:var(--ink);font-weight:600;cursor:pointer;padding:0 2px;" onclick="window.__giftAuthOpen && window.__giftAuthOpen('register')">Create an account</button>
+        </div>
+      </form>
+      <!-- Register form -->
+      <form id="authRegisterForm" action="/auth/register" method="POST" style="display:none;margin-top:2px;">
+        <%- include('../partials/csrf-token') %>
+        <div style="margin-bottom:14px;font-size:13px;color:var(--muted);">Create your account to save favourites, remember details and checkout faster.</div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:13px;font-weight:500;color:var(--ink2);">Full Name</label>
+          <input type="text" name="name" required autocomplete="name" placeholder="Your full name" style="width:100%;padding:9px 11px;border-radius:11px;border:1px solid var(--border2);font-size:13px;outline:none;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:13px;font-weight:500;color:var(--ink2);">Email</label>
+          <input type="email" name="email" required autocomplete="email" placeholder="you@example.com" style="width:100%;padding:9px 11px;border-radius:11px;border:1px solid var(--border2);font-size:13px;outline:none;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:13px;font-weight:500;color:var(--ink2);">Phone (10‑digit)</label>
+          <input type="tel" name="phone" pattern="[0-9]{10}" maxlength="10" autocomplete="tel" placeholder="9876543210" style="width:100%;padding:9px 11px;border-radius:11px;border:1px solid var(--border2);font-size:13px;outline:none;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:13px;font-weight:500;color:var(--ink2);">Password</label>
+          <input type="password" name="password" required minlength="6" autocomplete="new-password" placeholder="Create a strong password" style="width:100%;padding:9px 11px;border-radius:11px;border:1px solid var(--border2);font-size:13px;outline:none;">
+          <div style="margin-top:6px;font-size:11px;color:var(--muted);">At least 6 characters. Use a mix of letters and numbers.</div>
+        </div>
+        <button type="submit" style="width:100%;padding:11px 0;border:none;border-radius:999px;background:var(--ink);color:#fff;font-weight:600;font-size:14px;cursor:pointer;box-shadow:0 10px 26px rgba(0,0,0,.18);">Create account</button>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center;">
+          Already have an account?
+          <button type="button" style="border:none;background:none;color:var(--ink);font-weight:600;cursor:pointer;padding:0 2px;" onclick="window.__giftAuthOpen && window.__giftAuthOpen('login')">Log in</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    var overlay = document.getElementById('authModalOverlay');
+    var modal = document.getElementById('authModal');
+    var btnClose = document.getElementById('authModalClose');
+    var tabLogin = document.getElementById('authTabLogin');
+    var tabRegister = document.getElementById('authTabRegister');
+    var formLogin = document.getElementById('authLoginForm');
+    var formRegister = document.getElementById('authRegisterForm');
+    function openModal(mode){
+      if(!overlay || !modal) return;
+      overlay.style.display = 'block';
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      if(mode === 'register'){
+        formLogin.style.display = 'none';
+        formRegister.style.display = 'block';
+        tabLogin.style.borderBottomColor = 'transparent';
+        tabRegister.style.borderBottomColor = getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#C4622D';
+        tabLogin.style.fontWeight = '500';
+        tabRegister.style.fontWeight = '600';
+      } else {
+        formLogin.style.display = 'block';
+        formRegister.style.display = 'none';
+        tabLogin.style.borderBottomColor = getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#C4622D';
+        tabRegister.style.borderBottomColor = 'transparent';
+        tabLogin.style.fontWeight = '600';
+        tabRegister.style.fontWeight = '500';
+      }
+    }
+    function closeModal(){
+      if(!overlay || !modal) return;
+      overlay.style.display = 'none';
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('click', function(e){
+      var t = e.target;
+      if(t && t.classList && t.classList.contains('nav-cta') && t.textContent.trim().toLowerCase() === 'sign in'){
+        e.preventDefault();
+        openModal('login');
+      }
+    });
+    if(btnClose) btnClose.addEventListener('click', closeModal);
+    if(overlay) overlay.addEventListener('click', closeModal);
+    if(tabLogin) tabLogin.addEventListener('click', function(){ openModal('login'); });
+    if(tabRegister) tabRegister.addEventListener('click', function(){ openModal('register'); });
+    // Close on Esc
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape'){ closeModal(); }
+    });
+    // Burger toggle
+    var burger = document.getElementById('navBurger');
+    var nav = document.querySelector('.nav');
+    if(burger && nav){
+      burger.addEventListener('click', function(){
+        nav.classList.toggle('nav-open');
+      });
+    }
+    // Expose auth state for other scripts (if needed)
+    window.GIFT_USER_LOGGED_IN = <%= typeof userId !== 'undefined' && userId ? 'true' : 'false' %>;
+    // Intercept auth-required actions (only on catalog/collections pages)
+    document.addEventListener('click', function(e){
+      if(window.GIFT_USER_LOGGED_IN === true || window.GIFT_USER_LOGGED_IN === 'true') return;
+      if(!(window.location.pathname.startsWith('/catalog') || window.location.pathname.startsWith('/collections'))) return;
+      var target = e.target.closest('[data-requires-auth=\"true\"]');
+      if(target){
+        e.preventDefault();
+        openModal('login');
+      }
+    });
+    // Explicit login/register triggers from links/buttons
+    document.addEventListener('click', function(e){
+      var t = e.target.closest('.js-open-auth-login');
+      if(t){
+        e.preventDefault();
+        openModal('login');
+        return;
+      }
+      var r = e.target.closest('.js-open-auth-register');
+      if(r){
+        e.preventDefault();
+        openModal('register');
+      }
+    });
+    // Expose for other links
+    window.__giftAuthOpen = openModal;
+  })();
+</script>
+<% if (typeof flash !== 'undefined' && flash && flash.message && flash.message.includes('login')) { %>
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+    if(window.__giftAuthOpen){ window.__giftAuthOpen('login'); }
+  });
+</script>
+<% } %>

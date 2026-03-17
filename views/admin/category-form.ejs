@@ -1,0 +1,122 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout">
+    <%- include('../partials/admin-sidebar', { currentPage: 'categories' }) %>
+    
+    <div class="admin-main">
+        <%- include('../partials/admin-header', { pageTitle: category ? 'Edit Category' : 'Add New Category' }) %>
+        
+        <div class="admin-content">
+            <% if (typeof flash !== 'undefined' && flash) { %>
+                <div class="alert alert-<%= flash.type === 'error' ? 'danger' : 'success' %> alert-dismissible fade show" role="alert">
+                    <%= flash.message %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <% } %>
+            
+            <div class="admin-card">
+                <h4 class="mb-4"><i class="bi bi-<%= category ? 'pencil' : 'plus-circle' %>"></i> <%= category ? 'Edit Category' : 'Add New Category' %></h4>
+                
+                <form action="<%= category ? `/admin/categories/${category.id}` : '/admin/categories' %>" method="POST" id="categoryForm">
+                    <%- include('../partials/csrf-token') %>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Category Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       value="<%= category ? category.name : '' %>" required 
+                                       placeholder="e.g., Jeans, Shirt, Sarees">
+                                <small class="text-muted">This will be displayed to customers</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="4" 
+                                          placeholder="Optional description for this category"><%= category ? (category.description || '') : '' %></textarea>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="sort_order" class="form-label">Sort Order</label>
+                                    <input type="number" class="form-control" id="sort_order" name="sort_order" 
+                                           value="<%= category ? category.sort_order : 0 %>" min="0">
+                                    <small class="text-muted">Lower numbers appear first</small>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="is_active" class="form-label">Status</label>
+                                    <select class="form-select" id="is_active" name="is_active">
+                                        <option value="true" <%= category && category.is_active ? 'selected' : '' %>>Active</option>
+                                        <option value="false" <%= category && !category.is_active ? 'selected' : '' %>>Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="/admin/categories" class="btn btn-outline-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> <%= category ? 'Update Category' : 'Create Category' %>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="admin-card" style="background: #f8f9fa;">
+                                <h6 class="mb-3"><i class="bi bi-info-circle"></i> Category Info</h6>
+                                <div class="mb-3">
+                                    <strong>Slug:</strong>
+                                    <div id="slugPreview" class="text-muted mt-1">
+                                        <%= category ? category.slug : 'Will be generated automatically' %>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info mb-0">
+                                    <small>
+                                        <i class="bi bi-lightbulb"></i> <strong>Tip:</strong> Categories help organize your products. Make sure to use clear, descriptive names.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Auto-generate slug preview
+    const nameInput = document.getElementById('name');
+    const slugPreview = document.getElementById('slugPreview');
+    
+    if (nameInput && slugPreview) {
+        nameInput.addEventListener('input', function() {
+            const slug = this.value.toLowerCase()
+                .trim()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/[\s_-]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+            slugPreview.textContent = slug || 'Will be generated automatically';
+        });
+    }
+    
+    // Sidebar toggle
+    document.getElementById('mobileSidebarToggle')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
+    });
+    
+    document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('sidebarOverlay').classList.remove('active');
+    });
+    
+    document.getElementById('sidebarOverlay')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.remove('active');
+        this.classList.remove('active');
+    });
+</script>
+</body>
+</html>
+

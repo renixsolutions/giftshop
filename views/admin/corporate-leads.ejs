@@ -1,0 +1,62 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout">
+    <%- include('../partials/admin-sidebar', { currentPage: 'leads' }) %>
+    
+    <div class="admin-main">
+        <%- include('../partials/admin-header', { pageTitle: 'Corporate Leads' }) %>
+        
+        <div class="admin-content">
+            <% if (typeof flash !== 'undefined' && flash) { %>
+                <div class="alert alert-<%= flash.type === 'error' ? 'danger' : 'success' %> alert-dismissible fade show" role="alert">
+                    <%= flash.message %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <% } %>
+            
+            <div class="admin-table">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Contact</th>
+                            <th>Email / Phone</th>
+                            <th>Message</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (leads && leads.length) { %>
+                            <% leads.forEach(lead => { %>
+                            <tr>
+                                <td><%= lead.company_name || '-' %></td>
+                                <td><%= lead.contact_person || '-' %></td>
+                                <td><%= lead.email %><br><small class="text-muted"><%= lead.phone || '-' %></small></td>
+                                <td><small><%= (lead.message || '').substring(0, 80) %><%= (lead.message && lead.message.length > 80) ? '...' : '' %></small></td>
+                                <td><span class="badge bg-<%= lead.status === 'closed' ? 'secondary' : lead.status === 'in_progress' ? 'info' : 'warning' %>"><%= lead.status %></span></td>
+                                <td><%= new Date(lead.created_at).toLocaleDateString() %></td>
+                                <td>
+                                    <form action="/admin/leads/<%= lead.id %>/status" method="POST" class="d-inline">
+                                        <%- include('../partials/csrf-token') %>
+                                        <select name="status" class="form-select form-select-sm d-inline-block" style="width:auto;" onchange="this.form.submit()">
+                                            <option value="new" <%= lead.status === 'new' ? 'selected' : '' %>>New</option>
+                                            <option value="in_progress" <%= lead.status === 'in_progress' ? 'selected' : '' %>>In progress</option>
+                                            <option value="closed" <%= lead.status === 'closed' ? 'selected' : '' %>>Closed</option>
+                                        </select>
+                                    </form>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr><td colspan="7" class="text-muted text-center py-4">No corporate leads yet.</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
