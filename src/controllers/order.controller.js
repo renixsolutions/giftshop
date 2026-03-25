@@ -44,10 +44,15 @@ const showCheckout = async (req, res) => {
       return res.redirect('/cart');
     }
     const user = await db('users').where({ id: userId }).first();
+
+    const deliveryCharge = 150;
+    const grandTotal = Number(totalAmount) + deliveryCharge;
     res.render('user/checkout', {
       title: 'Checkout',
       cartItems,
       totalAmount,
+      deliveryCharge,
+      grandTotal,
       userName: user ? user.name : '',
       userId
     });
@@ -110,11 +115,13 @@ const createOrder = async (req, res) => {
         return res.redirect('/orders/checkout');
       }
     }
+    const deliveryCharge = 150;
     const payMode = payment_mode || 'cod';
-    const advancedPaid = payMode === 'partial_cod' ? Math.round(totalAmount * 0.5 * 100) / 100 : 0;
+    const orderTotal = Number(totalAmount) + deliveryCharge;
+    const advancedPaid = payMode === 'partial_cod' ? Math.round(orderTotal * 0.5 * 100) / 100 : 0;
     const [order] = await db('orders').insert({
       user_id: userId,
-      total_amount: totalAmount,
+      total_amount: orderTotal,
       status: 'processing',
       customer_name: customer_name.trim(),
       customer_phone: `+91${cleanPhone}`,

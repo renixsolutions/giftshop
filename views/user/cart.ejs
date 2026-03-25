@@ -30,12 +30,13 @@
             <% } else { 
                  let imgSrc = '';
                  if (item.image) {
-                   if (item.image.startsWith('http')) {
-                     imgSrc = item.image;
-                   } else if (item.image.startsWith('/')) {
-                     imgSrc = item.image;
+                   const raw = String(item.image).trim();
+                   if (raw.startsWith('http://') || raw.startsWith('https://')) {
+                     imgSrc = raw;
+                   } else if (raw.startsWith('/')) {
+                     imgSrc = raw;
                    } else {
-                     imgSrc = '/uploads/' + item.image;
+                     imgSrc = '/uploads/' + raw;
                    }
                  }
             %>
@@ -64,9 +65,21 @@
                 <form action="/cart/<%= item.id %>/update" method="POST" id="updateCartForm<%= item.id %>">
                   <%- include('../partials/csrf-token') %>
                   <input type="hidden" name="quantity" value="<%= item.quantity %>" id="cartQuantityInput<%= item.id %>">
-                  <button type="button" class="qb" onclick="decreaseCartQuantity(<%= item.id %>, <%= item.stock %>)">−</button>
+                  <button
+                    type="button"
+                    class="qb"
+                    onclick="decreaseCartQuantityFromBtn(this)"
+                    data-item-id="<%= item.id %>"
+                    data-max-stock="<%= item.stock %>"
+                  >-</button>
                   <span class="qn" id="cartQuantityDisplay<%= item.id %>"><%= item.quantity %></span>
-                  <button type="button" class="qb" onclick="increaseCartQuantity(<%= item.id %>, <%= item.stock %>)">+</button>
+                  <button
+                    type="button"
+                    class="qb"
+                    onclick="increaseCartQuantityFromBtn(this)"
+                    data-item-id="<%= item.id %>"
+                    data-max-stock="<%= item.stock %>"
+                  >+</button>
                 </form>
               <% } %>
               <form action="/cart/<%= item.id %>/remove" method="POST" style="display:inline;">
@@ -81,15 +94,7 @@
         </div>
       <% }); %>
 
-      <% if (total >= 999) { %>
-      <div style="margin-top:28px;padding:20px;background:var(--greenbg);border:1px solid #B2E4C5;border-radius:var(--r);display:flex;align-items:center;gap:12px;">
-        <span style="font-size:18px;">🎉</span>
-        <div>
-          <div style="font-size:13.5px;font-weight:600;color:var(--green);">You qualify for free delivery!</div>
-          <div style="font-size:12.5px;color:#3B6D11;">Your order is above ₹999. Free standard shipping applied.</div>
-        </div>
-      </div>
-      <% } %>
+      <!-- Fixed delivery charges apply at checkout -->
 
     <% } else { %>
       <div class="cart-empty-shell">
@@ -97,9 +102,14 @@
           <div class="cart-empty-icon">🛒</div>
           <h2 class="cart-empty-title">Your cart is empty</h2>
           <p class="cart-empty-sub">Start shopping to add items to your cart. Your saved hampers and gift boxes will appear here.</p>
-          <a href="/collections" class="cart-empty-btn">
-            Browse Collections
-          </a>
+          <div class="cart-empty-actions">
+            <a href="/collections" class="cart-empty-btn">
+              Browse Collections
+            </a>
+            <a href="/build-hamper" class="cart-empty-btn cart-empty-btn--ghost">
+              Build a Hamper
+            </a>
+          </div>
         </div>
       </div>
     <% } %>
@@ -108,9 +118,10 @@
   <% if (cartItems && cartItems.length > 0) { %>
   <div class="cart-sidebar">
     <div class="cs-title">Order Summary</div>
+    <% const deliveryFee = 150; %>
     <div class="cs-row"><span>Subtotal</span><span>₹<%= total.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></span></div>
-    <div class="cs-row"><span>Delivery</span><span style="color:var(--green);font-weight:500;">FREE</span></div>
-    <div class="cs-total"><span class="cs-total-l">Total</span><span class="cs-total-r">₹<%= total.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></span></div>
+    <div class="cs-row"><span>Delivery</span><span>₹<%= deliveryFee.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></span></div>
+    <div class="cs-total"><span class="cs-total-l">Total</span><span class="cs-total-r">₹<%= (total + deliveryFee).toLocaleString('en-IN', {minimumFractionDigits: 2}) %></span></div>
     <button class="btn-block" style="margin-top:18px;" onclick="window.location.href='/orders/checkout'">
       Proceed to Checkout →
     </button>
@@ -124,6 +135,22 @@
 
 <script>
     // Cart quantity control functions
+    function increaseCartQuantityFromBtn(btn) {
+        if (!btn) return;
+        const itemId = btn.dataset.itemId;
+        const maxStock = parseInt(btn.dataset.maxStock, 10);
+        if (!itemId || isNaN(maxStock)) return;
+        increaseCartQuantity(itemId, maxStock);
+    }
+    
+    function decreaseCartQuantityFromBtn(btn) {
+        if (!btn) return;
+        const itemId = btn.dataset.itemId;
+        const maxStock = parseInt(btn.dataset.maxStock, 10);
+        if (!itemId || isNaN(maxStock)) return;
+        decreaseCartQuantity(itemId, maxStock);
+    }
+    
     function increaseCartQuantity(itemId, maxStock) {
         const display = document.getElementById('cartQuantityDisplay' + itemId);
         const input = document.getElementById('cartQuantityInput' + itemId);
@@ -284,6 +311,13 @@
     color:var(--muted);
     margin-bottom:18px;
   }
+  .cart-empty-actions{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin-top: 8px;
+  }
   .cart-empty-btn{
     display:inline-block;
     padding:11px 22px;
@@ -296,6 +330,18 @@
     letter-spacing:.06em;
     box-shadow:0 8px 20px rgba(0,0,0,.2);
     transition:background .2s, transform .1s, box-shadow .2s;
+  }
+  .cart-empty-btn--ghost{
+    background:#fff;
+    color:var(--ink);
+    border:1.5px solid var(--border2);
+    box-shadow:none;
+  }
+  .cart-empty-btn--ghost:hover{
+    background:var(--warm);
+    border-color:var(--ink);
+    color:var(--ink);
+    transform:translateY(-1px);
   }
   .cart-empty-btn:hover{
     background:var(--accent);
@@ -311,6 +357,10 @@
     }
     .cart-sidebar{
       order:-1;
+    }
+    .cart-empty-card{
+      padding:34px 22px 28px;
+      border-radius:20px;
     }
   }
 </style>

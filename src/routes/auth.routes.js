@@ -6,19 +6,22 @@ const { setFlash } = require('../../libs/helpers');
 
 // We no longer show standalone login/register pages – only popup
 router.get('/register', redirectIfAuthenticated, (req, res) => {
-  setFlash(req, 'info', 'Create an account to continue');
   res.redirect('/');
 });
 
 router.post('/register', redirectIfAuthenticated, authController.register);
 
 router.get('/login', redirectIfAuthenticated, (req, res) => {
-  setFlash(req, 'error', 'Please login to continue');
   res.redirect('/');
 });
 
 router.post('/login', redirectIfAuthenticated, authController.login);
 router.post('/logout', authController.logout);
+
+// Email verification (2-step signup)
+router.get('/verify-email', authController.showVerifyEmail);
+router.get('/verify-email/confirm', authController.confirmEmailVerification);
+router.post('/verify-email/resend', authController.resendEmailVerification);
 
 module.exports = router;
 

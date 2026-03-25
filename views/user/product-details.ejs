@@ -19,32 +19,30 @@
             <p class="pd-sub">
                 Thoughtfully curated gift, beautifully packed and ready to delight.
             </p>
-            <% if (avgRating && avgRating > 0) { %>
-            <div class="pd-hero-rating">
-                <div class="pd-hero-stars">
-                    <% for (let i = 1; i <= 5; i++) { %>
-                        <span class="pd-star <%= i <= Math.round(avgRating) ? 'pd-star--on' : '' %>">★</span>
-                    <% } %>
-                </div>
-                <div class="pd-hero-rating-meta">
-                    <span class="pd-hero-rating-val"><%= avgRating %></span>
-                    <span class="pd-hero-rating-text">· <%= totalRatings || 0 %> <%= totalRatings === 1 ? 'review' : 'reviews' %></span>
+        </div>
+        <% if (avgRating > 0 && totalRatings > 0) { %>
+            <div class="pd-hero-rating-right" aria-label="Product rating summary">
+                <div class="pd-hero-rating-pill">
+                    <div class="pd-hero-rating-left">
+                        <span class="pd-hero-rating-val"><%= avgRating %></span><span class="pd-hero-rating-out">/5</span>
+                    </div>
+                    <div class="pd-hero-rating-stars">
+                        <% for (let i = 1; i <= 5; i++) { %>
+                            <span class="pd-hero-star <%= i <= Math.round(avgRating) ? 'on' : '' %>">★</span>
+                        <% } %>
+                    </div>
+                    <div class="pd-hero-rating-count">
+                        Based on <strong><%= totalRatings || 0 %></strong> <%= totalRatings === 1 ? 'rating' : 'ratings' %>
+                    </div>
                 </div>
             </div>
-            <% } %>
-        </div>
-        <div class="pd-meta-pill">
-            <span class="pd-meta-label">Price</span>
-            <span class="pd-meta-value">
-                Rs. <%= product.price.toLocaleString('en-IN', {minimumFractionDigits: 2}) %>
-            </span>
-        </div>
+        <% } %>
     </div>
 </div>
 
 <div class="pd-shell">
-    <% if (typeof flash !== 'undefined' && flash) { %>
-        <div class="alert alert-<%= flash.type === 'error' ? 'danger' : 'success' %> alert-dismissible fade show" role="alert">
+    <% if (typeof flash !== 'undefined' && flash && flash.type === 'error') { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <%= flash.message %>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -59,15 +57,46 @@
                     class="pd-image"
                     onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+Tm8gSW1hZ2UgQXZhaWxhYmxlPC90ZXh0Pjwvc3ZnPg==';"
                 >
+                <% if (product.video_url) { %>
+                    <video
+                        class="pd-video-preview"
+                        src="<%= product.video_url %>"
+                        controls
+                        preload="metadata"
+                    ></video>
+                <% } %>
             </div>
             
-            <% if (galleryImages && galleryImages.length > 0) { %>
+            <%
+                const hasVideo = !!(product && product.video_url);
+                const hasGalleryThumbs = !!(galleryImages && galleryImages.length > 0);
+            %>
+            <% if (hasVideo || hasGalleryThumbs) { %>
             <div class="pd-thumbs">
-                <% galleryImages.forEach(function(img) { %>
-                    <button type="button" class="pd-thumb" onclick="document.querySelector('.pd-image').src='<%= img.image_url %>'">
-                        <img src="<%= img.image_url %>" alt="" onerror="this.style.display='none'">
+                <% if (hasGalleryThumbs) { %>
+                    <% galleryImages.forEach(function(img) { %>
+                        <button
+                            type="button"
+                            class="pd-thumb"
+                            onclick="(function(){ var v=document.querySelector('.pd-video-preview'); var imgEl=document.querySelector('.pd-image'); if(v){ v.style.display='none'; } if(imgEl){ imgEl.src='<%= img.image_url %>'; imgEl.style.display='block'; } })()"
+                        >
+                            <img src="<%= img.image_url %>" alt="" onerror="this.style.display='none'">
+                        </button>
+                    <% }); %>
+                <% } %>
+
+                <% if (hasVideo) { %>
+                    <button
+                        type="button"
+                        class="pd-thumb"
+                        onclick="(function(){ var v=document.querySelector('.pd-video-preview'); var img=document.querySelector('.pd-image'); if(v){ v.style.display='block'; try{v.currentTime=0;}catch(e){} } if(img){ img.style.display='none'; } })()"
+                        title="Play video"
+                    >
+                        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.04);">
+                            <span style="font-size:26px;color:var(--veera-accent-dark);line-height:1;">▶</span>
+                        </div>
                     </button>
-                <% }); %>
+                <% } %>
             </div>
             <% } %>
         </div>
@@ -86,54 +115,33 @@
                             <span class="pd-tag pd-tag--occasion"><%= product.occasion %></span>
                         <% } %>
                     </div>
-                    <h2 class="pd-summary-title"><%= product.title %></h2>
+                    <!-- Product name shown only once in hero -->
                     
                     <div class="price-section mb-4 pd-price-row">
-                        <% if (product.original_price && product.original_price > product.price) { %>
-                            <span class="original-price">Rs. <%= product.original_price.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></span>
-                        <% } %>
-                        <div class="mt-2">
+                        <div class="pd-price-top">
                             <span class="current-price">Rs. <%= product.price.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></span>
                             <% if (product.discount_percentage && product.discount_percentage > 0) { %>
                                 <span class="discount-badge"><%= product.discount_percentage %>% OFF</span>
                             <% } %>
                         </div>
-                    </div>
-                    
-                    <!-- Rating Display -->
-                    <div class="mb-4">
-                        <% if (avgRating > 0) { %>
-                            <div class="pd-rating-card">
-                                <div>
-                                    <div class="pd-rating-num"><%= avgRating %></div>
-                                    <div class="pd-rating-denom">out of 5</div>
-                                </div>
-                                <div class="pd-rating-info">
-                                    <div class="pd-rating-mini-stars">
-                                        <% for (let i = 1; i <= 5; i++) { %>
-                                            <span class="<%= i <= Math.round(avgRating) ? 'on' : '' %>">★</span>
-                                        <% } %>
-                                    </div>
-                                    <p>Based on <%= totalRatings || 0 %> <%= totalRatings === 1 ? 'rating' : 'ratings' %></p>
-                                </div>
-                            </div>
-                        <% } else { %>
-                            <div class="no-rating-message">
-                                <p class="text-muted mb-0">
-                                    <i class="bi bi-info-circle"></i> No ratings yet. Be the first to review this product!
-                                </p>
+                        <% if (product.original_price && Number(product.original_price) > 0) { %>
+                            <div class="pd-mrp-row">
+                                <span class="pd-mrp-label">MRP</span>
+                                <span class="original-price">Rs. <%= Number(product.original_price).toLocaleString('en-IN', {minimumFractionDigits: 2}) %></span>
                             </div>
                         <% } %>
                     </div>
                     
-                    <div class="mb-4 pd-stock-info">
+                    <!-- Rating moved to hero (right side of title) -->
+                    
+                    <div class="pd-stock-info">
                         <span class="pd-stock-dot <%= product.stock > 0 ? 'on' : '' %>"></span>
                         <span>
                             <%= product.stock > 0 ? `${product.stock} in stock – order soon` : 'Currently out of stock' %>
                         </span>
                     </div>
                     
-                    <div class="mb-4 pd-desc">
+                    <div class="pd-desc">
                         <h6>What’s inside</h6>
                         <p class="text-muted"><%= product.description %></p>
                     </div>
@@ -142,23 +150,19 @@
                     
                     <% if (product.stock > 0) { %>
                         <% if (typeof userId !== 'undefined' && userId) { %>
-                            <form action="/cart/add" method="POST" class="mb-4" id="addToCartForm">
+                            <form action="/cart/add" method="POST" class="pd-buy-form" id="addToCartForm">
                                 <%- include('../partials/csrf-token') %>
                                 <input type="hidden" name="productId" value="<%= product.id %>">
                                 <input type="hidden" name="quantity" value="1" id="quantityInput">
-                                <div class="mb-4">
+                                <div class="pd-qty-row">
                                     <label class="form-label fw-bold mb-2">Quantity</label>
                                     <div class="quantity-controls">
-                                        <button type="button" class="quantity-btn" onclick="decreaseQuantity(<%= product.stock %>)">
-                                            <i class="bi bi-dash"></i>
-                                        </button>
+                                        <button type="button" class="quantity-btn" onclick="decreaseQuantity(<%= product.stock %>)" aria-label="Decrease quantity">-</button>
                                         <input type="number" class="quantity-display" value="1" min="1" max="<%= product.stock %>" id="quantityDisplay" readonly>
-                                        <button type="button" class="quantity-btn" onclick="increaseQuantity(<%= product.stock %>)">
-                                            <i class="bi bi-plus"></i>
-                                        </button>
+                                        <button type="button" class="quantity-btn" onclick="increaseQuantity(<%= product.stock %>)" aria-label="Increase quantity">+</button>
                                     </div>
                                 </div>
-                                <div class="mt-3">
+                                <div class="pd-cta-row">
                                     <button type="submit" class="btn btn-gradient-modern btn-lg w-100 py-3 pd-add-btn">
                                         <i class="bi bi-cart-plus"></i> Add to Cart
                                     </button>
@@ -181,79 +185,87 @@
     </div>
 
     <!-- Reviews Section -->
-    <div class="row mt-5">
+    <div class="row mt-5 pd-reviews-wrap">
         <div class="col-12">
-            <div class="reviews-section-header mb-4">
-                <h3 class="reviews-title">
-                    Customer Reviews
-                </h3>
-                <% if (avgRating > 0) { %>
-                    <div class="rating-summary-card">
-                        <div class="d-flex align-items-center flex-wrap gap-3">
-                            <div class="rating-display">
-                                <div class="rating-number"><%= avgRating %></div>
-                                <div class="rating-out-of">out of 5</div>
-                            </div>
-                            <div class="rating-stars">
-                                <% for (let i = 1; i <= 5; i++) { %>
-                                    <i class="bi bi-star<%= i <= Math.round(avgRating) ? '-fill' : '' %> <%= i <= Math.round(avgRating) ? 'text-warning' : 'text-muted' %>"></i>
-                                <% } %>
-                            </div>
-                            <div class="rating-count">
-                                <span>Based on <strong><%= totalRatings || 0 %></strong> <%= totalRatings === 1 ? 'review' : 'reviews' %></span>
+            <% const hasReviews = reviews && reviews.length > 0; %>
+            <% if (hasReviews) { %>
+                <div class="reviews-section-header mb-4">
+                    <h3 class="reviews-title">Customer Reviews</h3>
+                    <% if (avgRating > 0) { %>
+                        <div class="rating-summary-card">
+                            <div class="d-flex align-items-center flex-wrap gap-3">
+                                <div class="rating-display">
+                                    <div class="rating-number"><%= avgRating %></div>
+                                    <div class="rating-out-of">out of 5</div>
+                                </div>
+                                <div class="rating-stars" aria-label="Average rating stars">
+                                    <% for (let i = 1; i <= 5; i++) { %>
+                                        <span class="rating-star <%= i <= Math.round(avgRating) ? 'on' : '' %>">★</span>
+                                    <% } %>
+                                </div>
+                                <div class="rating-count">
+                                    <span>Based on <strong><%= totalRatings || 0 %></strong> <%= totalRatings === 1 ? 'review' : 'reviews' %></span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                <% } else { %>
-                    <div class="no-rating-message">
-                        <p class="text-muted mb-0">
-                            <i class="bi bi-info-circle"></i> No reviews yet. Be the first to review this product!
-                        </p>
-                    </div>
-                <% } %>
-            </div>
+                    <% } %>
+                </div>
+            <% } %>
             
-            <% if (typeof userId !== 'undefined' && userId) { %>
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5>Add a Review</h5>
-                        <form action="/products/<%= product.id %>/review" method="POST">
+            <% if (typeof canReview !== 'undefined' && canReview) { %>
+                <div class="review-form-card mb-4">
+                    <div class="review-form-head">
+                        <div>
+                            <div class="review-form-kicker">Share your experience</div>
+                            <div class="review-form-title">Add a Review</div>
+                        </div>
+                        <div class="review-form-hint">Your rating helps others choose better.</div>
+                    </div>
+                    <div class="review-form-body">
+                        <form action="/products/<%= product.id %>/review" method="POST" class="review-form">
                             <%- include('../partials/csrf-token') %>
                             <div class="mb-3">
                                 <label class="form-label">Rating <span class="text-danger">*</span></label>
-                                <div class="star-rating-input mb-2">
+                                <div class="star-rating-input mb-2" data-rating-label>
                                     <% for (let i = 5; i >= 1; i--) { %>
                                         <input type="radio" name="rating" id="rating-<%= product.id %>-<%= i %>" value="<%= i %>" required>
                                         <label for="rating-<%= product.id %>-<%= i %>" class="star-label">
-                                            <i class="bi bi-star-fill"></i>
+                                            <span class="star-char">★</span>
                                         </label>
                                     <% } %>
                                 </div>
-                                <small class="text-muted">Click on a star to rate</small>
+                                <div class="review-rating-meta">
+                                    <span class="review-rating-text">Click stars to rate</span>
+                                    <span class="review-rating-selected" id="selectedRatingText-<%= product.id %>">No rating selected</span>
+                                </div>
                             </div>
                             <div class="mb-3">
                                 <label for="message" class="form-label">Review</label>
-                                <textarea class="form-control" id="message" name="message" rows="3" placeholder="Share your experience with this product... (Optional)"></textarea>
+                                <textarea class="form-control review-textarea" id="message" name="message" rows="4" placeholder="What did you like? How was the quality, packaging, and delivery? (Optional)"></textarea>
                             </div>
-                            <button type="submit" class="btn btn-gradient-modern" style="color: white !important; border: none;">
-                                <i class="bi bi-star-fill"></i> Submit Review
+                            <button type="submit" class="btn btn-gradient-modern review-submit-btn" style="color: white !important; border: none;">
+                                Submit Review
                             </button>
                         </form>
                     </div>
                 </div>
             <% } %>
             
-            <div class="reviews-list mt-4">
-                <% if (reviews && reviews.length > 0) { %>
+            <% if (hasReviews) { %>
+                <div class="reviews-list mt-4">
                     <% reviews.forEach(review => { %>
-                        <div class="review-card mb-3">
+                        <% const isMe = (typeof userId !== 'undefined' && userId && review.user_id && String(review.user_id) === String(userId)); %>
+                        <div class="review-card mb-3 <%= isMe ? 'review-card--me' : '' %>">
                             <div class="review-header">
                                 <div class="reviewer-info">
                                     <div class="reviewer-avatar">
                                         <span><%= (review.user_name || '').charAt(0).toUpperCase() %></span>
                                     </div>
                                     <div class="reviewer-details">
-                                        <h6 class="reviewer-name mb-0"><%= review.user_name %></h6>
+                                        <h6 class="reviewer-name mb-0">
+                                            <%= review.user_name %>
+                                            <% if (isMe) { %><span class="reviewer-me">(Me)</span><% } %>
+                                        </h6>
                                         <small class="review-date text-muted">
                                             <i class="bi bi-calendar3"></i>
                                             <%= new Date(review.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) %>
@@ -262,7 +274,7 @@
                                 </div>
                                 <div class="review-rating">
                                     <% for (let i = 1; i <= 5; i++) { %>
-                                        <i class="bi bi-star<%= i <= review.rating ? '-fill' : '' %> <%= i <= review.rating ? 'text-warning' : 'text-muted' %>"></i>
+                                        <span class="review-star <%= i <= review.rating ? 'on' : '' %>">★</span>
                                     <% } %>
                                 </div>
                             </div>
@@ -271,10 +283,40 @@
                                     <p class="mb-0"><%= review.message %></p>
                                 </div>
                             <% } %>
+
+                            <% if (isMe) { %>
+                                <div class="review-actions">
+                                    <button type="button" class="review-edit-btn" data-review-id="<%= review.id %>">Edit</button>
+                                </div>
+                                <div class="review-edit-wrap" id="reviewEditWrap-<%= review.id %>" style="display:none;">
+                                    <form action="/products/<%= product.id %>/review" method="POST" class="review-edit-form">
+                                        <%- include('../partials/csrf-token') %>
+                                        <div class="mb-2">
+                                            <label class="form-label small mb-1">Update rating</label>
+                                            <div class="star-rating-input mb-2">
+                                                <% for (let i = 5; i >= 1; i--) { %>
+                                                    <input type="radio" name="rating" id="edit-rating-<%= review.id %>-<%= i %>" value="<%= i %>" <%= Number(review.rating) === i ? 'checked' : '' %> required>
+                                                    <label for="edit-rating-<%= review.id %>-<%= i %>" class="star-label">
+                                                        <span class="star-char">★</span>
+                                                    </label>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label small mb-1" for="edit-message-<%= review.id %>">Update review</label>
+                                            <textarea class="form-control review-textarea" id="edit-message-<%= review.id %>" name="message" rows="4"><%= review.message || '' %></textarea>
+                                        </div>
+                                        <div class="review-edit-cta">
+                                            <button type="submit" class="review-save-btn">Save</button>
+                                            <button type="button" class="review-cancel-btn" data-review-id="<%= review.id %>">Cancel</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            <% } %>
                         </div>
                     <% }); %>
-                <% } %>
-            </div>
+                </div>
+            <% } %>
         </div>
     </div>
 </div>
@@ -299,7 +341,7 @@
         justify-content: center;
         border: 2px solid #dee2e6;
         background: #fff;
-        color: var(--veera-text);
+        color: #1c1008;
         transition: all 0.2s ease;
         cursor: pointer;
         flex-shrink: 0;
@@ -336,6 +378,23 @@
         border-color: var(--veera-accent);
         box-shadow: 0 0 0 0.16rem rgba(212, 165, 116, 0.25);
     }
+
+    /* Buy form spacing */
+    .pd-buy-form{
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .pd-qty-row{
+        margin: 0;
+        padding: 0;
+    }
+    .pd-cta-row{
+        margin-top: 2px;
+        padding-bottom: 6px;
+    }
 </style>
 
 <script>
@@ -369,15 +428,72 @@
 
 <style>
     .pd-add-btn{
-        border-radius:12px;
-        font-weight:600;
-        letter-spacing:.04em;
-        box-shadow:0 8px 20px rgba(28,16,8,.18);
-        border:none;
+        width: 100%;
+        border-radius: 999px !important;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        font-size: 14px;
+        padding: 14px 18px !important;
+        min-height: 52px;
+        border: none !important;
+        background: linear-gradient(135deg, var(--veera-accent, #C4622D), var(--veera-accent-dark, #8A3B1F)) !important;
+        color: #fff !important;
+        display:flex !important;
+        align-items:center;
+        justify-content:center;
+        gap:10px;
+        box-shadow:0 12px 26px rgba(28,16,8,.18);
+    }
+    .pd-price-row{
+        background: linear-gradient(135deg, rgba(196,98,45,.10), rgba(255,255,255,.0));
+        border: 1px solid rgba(196,98,45,.18);
+        border-radius: 16px;
+        padding: 14px 14px 12px;
+    }
+    .pd-price-top{
+        display:flex;
+        align-items:baseline;
+        gap:10px;
+        flex-wrap:wrap;
+    }
+    .pd-mrp-row{
+        margin-top: 6px;
+        display:flex;
+        align-items:center;
+        gap:8px;
+        font-size: 12px;
+        color: rgba(28,16,8,.65);
+    }
+    .pd-mrp-label{
+        font-size: 11px;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: rgba(28,16,8,.55);
+    }
+    .original-price{
+        text-decoration: line-through;
+        opacity: .75;
     }
     .pd-add-btn:hover{
         transform:translateY(-1px);
-        box-shadow:0 10px 26px rgba(28,16,8,.24);
+        box-shadow:0 16px 34px rgba(28,16,8,.22);
+    }
+    .pd-add-btn:active{
+        transform:translateY(0);
+        box-shadow:0 10px 22px rgba(28,16,8,.16);
+    }
+
+    .pd-cta-row{
+        margin-top: 6px;
+    }
+    .pd-qty-row{
+        margin-top: 6px;
+    }
+    .pd-qty-row .form-label{
+        font-size: 13px;
+        letter-spacing: .04em;
+        color: rgba(28,16,8,.75);
     }
 
     /* Star Rating Input Styling */
@@ -395,6 +511,115 @@
         font-size: 2rem;
         color: #ddd;
         transition: color 0.2s ease, transform 0.1s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: rgba(0,0,0,0.02);
+        border: 1px solid rgba(0,0,0,0.06);
+    }
+    .star-rating-input .star-label i {
+        color: inherit;
+        font-size: 1.9rem;
+        line-height: 1;
+    }
+    .star-rating-input .star-label .star-char{
+        color: inherit;
+        font-size: 22px;
+        line-height: 1;
+        transform: translateY(-1px);
+    }
+
+    /* Review form card */
+    .review-form-card{
+        border-radius: 18px;
+        overflow:hidden;
+        border: 1px solid rgba(28,16,8,.10);
+        background: #fff;
+        box-shadow: 0 10px 26px rgba(28,16,8,.08);
+    }
+    .review-form-head{
+        padding: 16px 18px;
+        background: linear-gradient(135deg, rgba(196,98,45,.10), rgba(255,255,255,0));
+        border-bottom: 1px solid rgba(28,16,8,.08);
+        display:flex;
+        align-items:flex-end;
+        justify-content:space-between;
+        gap:10px;
+        flex-wrap:wrap;
+    }
+    .review-form-kicker{
+        font-size: 11px;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        color: rgba(196,98,45,.9);
+    }
+    .review-form-title{
+        font-family:'Playfair Display',serif;
+        font-weight:800;
+        font-size: 20px;
+        color: var(--ink);
+        line-height: 1.1;
+        margin-top: 2px;
+    }
+    .review-form-hint{
+        font-size: 12px;
+        color: rgba(28,16,8,.55);
+    }
+    .review-form-body{
+        padding: 16px 18px 18px;
+    }
+    .review-textarea{
+        border-radius: 14px;
+        border: 1px solid rgba(28,16,8,.12);
+        background: rgba(255,255,255,.96);
+        padding: 12px 12px;
+        font-size: 14px;
+        width: 100%;
+        height: 120px;
+        max-height: 120px;
+        min-height: 120px;
+        resize: none;
+        line-height: 1.5;
+    }
+    .review-textarea:focus{
+        border-color: rgba(196,98,45,.55);
+        box-shadow: 0 0 0 .16rem rgba(196,98,45,.18);
+    }
+    .review-rating-meta{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        flex-wrap:wrap;
+        margin-top: 6px;
+        font-size: 12px;
+        color: rgba(28,16,8,.60);
+    }
+    .review-rating-selected{
+        font-weight: 700;
+        color: rgba(28,16,8,.72);
+        background: rgba(28,16,8,.04);
+        border: 1px solid rgba(28,16,8,.08);
+        padding: 4px 10px;
+        border-radius: 999px;
+    }
+    .review-submit-btn{
+        width:100%;
+        border-radius: 14px;
+        padding: 12px 14px;
+        font-weight: 700;
+        letter-spacing: .04em;
+        box-shadow: 0 10px 22px rgba(28,16,8,.16);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:10px;
+        background: linear-gradient(135deg, var(--veera-accent, #C4622D), var(--veera-accent-dark, #8A3B1F));
+        color:#fff !important;
+        margin-top: 6px;
     }
     .star-rating-input .star-label:hover,
     .star-rating-input .star-label:hover ~ .star-label {
@@ -464,6 +689,16 @@
     }
     
     /* Review Listing Styles */
+    .pd-reviews-wrap{
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    .pd-reviews-wrap > .col-12{
+        padding-left: 0;
+        padding-right: 0;
+    }
     .reviews-section-header {
         margin-bottom: 1.75rem;
     }
@@ -476,10 +711,10 @@
     }
     
     .rating-summary-card {
-        background: linear-gradient(135deg, rgba(212, 165, 116, 0.1) 0%, rgba(232, 201, 163, 0.1) 100%);
-        border: 1px solid rgba(212, 165, 116, 0.2);
-        border-radius: 12px;
-        padding: 1.25rem 1.5rem;
+        background: linear-gradient(135deg, rgba(196,98,45,.10), rgba(255,255,255,0));
+        border: 1px solid rgba(196,98,45,.20);
+        border-radius: 16px;
+        padding: 14px 16px;
     }
     
     .rating-display {
@@ -504,6 +739,15 @@
     .rating-stars {
         display: flex;
         gap: 2px;
+        align-items: center;
+    }
+    .rating-star{
+        font-size: 14px;
+        color: #e0d2c4;
+        line-height: 1;
+    }
+    .rating-star.on{
+        color: #f5b200;
     }
     
     .rating-count {
@@ -530,6 +774,10 @@
         padding: 1.5rem;
         transition: all 0.3s ease;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .review-card--me{
+        border-color: rgba(196,98,45,.25);
+        box-shadow: 0 10px 24px rgba(28,16,8,.08);
     }
     
     .review-card:hover {
@@ -575,6 +823,19 @@
         font-size: 1rem;
         margin-bottom: 0.25rem;
     }
+    .reviewer-me{
+        margin-left: 8px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: rgba(196,98,45,.95);
+        background: rgba(196,98,45,.10);
+        border: 1px solid rgba(196,98,45,.25);
+        padding: 2px 8px;
+        border-radius: 999px;
+        vertical-align: middle;
+    }
     
     .review-date {
         font-size: 0.85rem;
@@ -593,8 +854,67 @@
         flex-shrink: 0;
     }
     
-    .review-rating i {
-        font-size: 1.1rem;
+    .review-star{
+        font-size: 14px;
+        color: #e0d2c4;
+        line-height: 1;
+    }
+    .review-star.on{
+        color: #f5b200;
+    }
+
+    .review-actions{
+        margin-top: 10px;
+        display:flex;
+        justify-content:flex-end;
+    }
+    .review-edit-btn{
+        border: 1px solid rgba(28,16,8,.12);
+        background: rgba(28,16,8,.04);
+        color: rgba(28,16,8,.78);
+        font-weight: 700;
+        font-size: 12px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        cursor: pointer;
+    }
+    .review-edit-btn:hover{
+        background: rgba(28,16,8,.07);
+    }
+    .review-edit-wrap{
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px dashed rgba(28,16,8,.12);
+    }
+    .review-edit-form .review-textarea{
+        height: 110px;
+        min-height: 110px;
+        max-height: 110px;
+    }
+    .review-edit-cta{
+        display:flex;
+        gap:10px;
+        justify-content:flex-end;
+        margin-top: 10px;
+    }
+    .review-save-btn{
+        border: none;
+        background: linear-gradient(135deg, var(--veera-accent, #C4622D), var(--veera-accent-dark, #8A3B1F));
+        color: #fff;
+        font-weight: 800;
+        padding: 10px 16px;
+        border-radius: 12px;
+        cursor: pointer;
+        box-shadow: 0 10px 22px rgba(28,16,8,.14);
+    }
+    .review-cancel-btn{
+        border: 1px solid rgba(28,16,8,.14);
+        background: #fff;
+        color: rgba(28,16,8,.72);
+        font-weight: 800;
+        padding: 10px 14px;
+        border-radius: 12px;
+        cursor: pointer;
     }
     
     .review-message {
@@ -630,6 +950,60 @@
         align-items: flex-end;
         justify-content: space-between;
         gap: 16px;
+    }
+    .pd-hero-rating-right{
+        display:flex;
+        align-items:flex-end;
+        justify-content:flex-end;
+        min-width: 260px;
+    }
+    .pd-hero-rating-pill{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.88);
+        border: 1px solid rgba(28,16,8,.10);
+        box-shadow: 0 10px 26px rgba(28,16,8,.10);
+        color: rgba(28,16,8,.72);
+        font-size: 12.5px;
+        white-space: nowrap;
+    }
+    .pd-hero-rating-left{
+        display:flex;
+        align-items:baseline;
+        gap:4px;
+        font-weight:800;
+        color: rgba(28,16,8,.85);
+    }
+    .pd-hero-rating-val{
+        font-family:'Playfair Display',serif;
+        font-size: 16px;
+        font-weight: 900;
+        line-height: 1;
+    }
+    .pd-hero-rating-out{
+        font-size: 12px;
+        opacity: .7;
+        font-weight: 800;
+    }
+    .pd-hero-rating-stars{
+        display:flex;
+        gap:2px;
+        align-items:center;
+        margin-top: 1px;
+    }
+    .pd-hero-star{
+        font-size: 13px;
+        color: #e0d2c4;
+        line-height: 1;
+    }
+    .pd-hero-star.on{
+        color:#f5b200;
+    }
+    .pd-hero-rating-count strong{
+        color: rgba(28,16,8,.88);
     }
     .pd-breadcrumb {
         display: flex;
@@ -741,6 +1115,13 @@
         border-radius: 18px;
         display: block;
     }
+    .pd-video-preview {
+        width: 100%;
+        height: 440px;
+        object-fit: cover;
+        border-radius: 18px;
+        display: none;
+    }
     .pd-thumbs {
         display: flex;
         gap: 8px;
@@ -768,7 +1149,7 @@
         border-radius: 22px;
         background: #fff;
         box-shadow: 0 10px 30px rgba(28,16,8,.08);
-        padding: 26px 28px 28px;
+        padding: 26px 28px 36px;
         border: 1px solid var(--border);
         position: sticky;
         top: 96px;
@@ -832,45 +1213,54 @@
         font-weight:600;
         letter-spacing:0.06em;
     }
-    .pd-rating-card{
-        background: var(--greenbg);
-        border-radius: 10px;
-        padding: 14px 18px;
+    /* Rating (clean row, not a big box) */
+    .pd-rating-row{
         display:flex;
         align-items:center;
-        gap:14px;
-        border:1px solid rgba(46,125,79,.3);
+        gap:12px;
+        padding: 6px 2px 14px;
+        border-bottom: 1px solid rgba(28,16,8,.08);
+        margin: 0 0 14px;
     }
-    .pd-rating-num{
+    .pd-rating-left{
+        display:flex;
+        align-items:baseline;
+        gap:4px;
+        min-width: 56px;
+    }
+    .pd-rating-val{
         font-family:'Playfair Display',serif;
-        font-size:28px;
-        font-weight:700;
-        color:var(--green);
-        line-height:1;
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--ink);
+        line-height: 1;
     }
-    .pd-rating-denom{
-        font-size:12px;
-        color:var(--green);
-        opacity:.75;
+    .pd-rating-out{
+        font-size: 12px;
+        color: rgba(28,16,8,.55);
+        font-weight: 700;
     }
-    .pd-rating-info{
-        font-size:12px;
-        color:var(--green);
+    .pd-rating-mid{
+        display:flex;
+        gap:2px;
+        align-items:center;
     }
-    .pd-rating-mini-stars{
-        color:#f5b200;
-        letter-spacing:1px;
-        margin-bottom:2px;
+    .pd-mini-star{
+        font-size: 14px;
+        color: #e0d2c4;
+        line-height: 1;
     }
-    .pd-rating-mini-stars span{
-        opacity:.35;
+    .pd-mini-star.on{
+        color: #f5b200;
     }
-    .pd-rating-mini-stars span.on{
-        opacity:1;
+    .pd-rating-right{
+        margin-left: auto;
+        font-size: 12.5px;
+        color: rgba(28,16,8,.62);
+        white-space: nowrap;
     }
-    .pd-rating-info p{
-        margin:0;
-        font-size:12px;
+    .pd-rating-right strong{
+        color: rgba(28,16,8,.78);
     }
     .pd-stock-info{
         display:flex;
@@ -878,6 +1268,7 @@
         gap:8px;
         font-size:13px;
         color:var(--muted);
+        margin: 10px 0 14px;
     }
     .pd-stock-dot{
         width:8px;
@@ -910,6 +1301,9 @@
         transform:translateY(-1px);
         color:#fff !important;
     }
+    .pd-desc{
+        margin-top: 8px;
+    }
     .pd-desc h6 {
         font-weight: 600;
         font-size: 12px;
@@ -931,7 +1325,19 @@
         .pd-summary-card {
             position: static;
         }
+        .pd-hero-inner{
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .pd-hero-rating-right{
+            align-self: flex-start;
+            min-width: auto;
+            margin-top: 10px;
+        }
         .pd-image {
+            height: 360px;
+        }
+        .pd-video-preview {
             height: 360px;
         }
     }
@@ -954,6 +1360,10 @@
             border-radius: 18px;
         }
         .pd-image {
+            height: 280px;
+            border-radius: 14px;
+        }
+        .pd-video-preview {
             height: 280px;
             border-radius: 14px;
         }
@@ -1022,9 +1432,34 @@
 <script>
     // Star rating hover effect for product details page
     document.addEventListener('DOMContentLoaded', function() {
+        // Review edit toggles (only for "Me" review)
+        document.querySelectorAll('.review-edit-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const id = this.getAttribute('data-review-id');
+                const wrap = document.getElementById('reviewEditWrap-' + id);
+                if (wrap) wrap.style.display = 'block';
+                this.style.display = 'none';
+            });
+        });
+        document.querySelectorAll('.review-cancel-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const id = this.getAttribute('data-review-id');
+                const wrap = document.getElementById('reviewEditWrap-' + id);
+                if (wrap) wrap.style.display = 'none';
+                const editBtn = document.querySelector('.review-edit-btn[data-review-id="' + id + '"]');
+                if (editBtn) editBtn.style.display = 'inline-flex';
+            });
+        });
+
         document.querySelectorAll('.star-rating-input').forEach(container => {
             const labels = container.querySelectorAll('.star-label');
             const inputs = container.querySelectorAll('input[type="radio"]');
+            const selectedText = (function(){
+                // Find nearby "selected rating" pill
+                const wrap = container.closest('.review-form') || container.parentElement;
+                if (!wrap) return null;
+                return wrap.querySelector('.review-rating-selected');
+            })();
             
             labels.forEach((label, index) => {
                 label.addEventListener('mouseenter', function() {
@@ -1067,8 +1502,15 @@
                             label.style.color = '#ddd';
                         }
                     });
+                    if (selectedText) {
+                        selectedText.textContent = rating + ' / 5 selected';
+                    }
                 });
             });
+
+            // Initial state (if browser restores form or on back navigation)
+            const checked = container.querySelector('input[type="radio"]:checked');
+            if (checked && selectedText) selectedText.textContent = parseInt(checked.value) + ' / 5 selected';
         });
     });
 </script>

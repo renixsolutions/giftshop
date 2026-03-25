@@ -99,6 +99,7 @@
                                         <% }); %>
                                     <% } %>
                                 </select>
+                                <div id="occasionSelectedLabels" class="mt-2" style="display:flex;flex-wrap:wrap;gap:6px;min-height:24px;"></div>
                                 <small class="text-muted">
                                     Hold Ctrl (Cmd on Mac) to select multiple. 
                                     <a href="/admin/occasions" target="_blank">Manage Occasions</a>
@@ -136,57 +137,48 @@
                                 </div>
                             </div>
                             
-                            <div class="mb-3">
-                                <label for="imageFile" class="form-label">Primary Image (shown first)</label>
-                                <input type="file" class="form-control" id="imageFile" name="image" accept="image/*">
-                                <small class="text-muted">This image uses the cropper (2:3 ratio) and appears as the main card image.</small>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="image" class="form-label">Or Enter Image URL</label>
-                                <input type="url" class="form-control" id="image" name="image" 
-                                       value="<%= product && !product.image.startsWith('/uploads/') ? product.image : '' %>" 
-                                       placeholder="https://example.com/image.jpg">
-                                <small class="text-muted">Leave empty if uploading file</small>
-                            </div>
-                            
-                            <!-- Hidden input for cropped image -->
-                            <input type="hidden" id="croppedImage" name="croppedImage">
-                            
-                            <!-- Additional gallery images -->
-                            <div class="mb-3">
-                                <label for="galleryFiles" class="form-label">Gallery Images (optional)</label>
-                                <input type="file" class="form-control" id="galleryFiles" name="gallery" accept="image/*" multiple>
-                                <small class="text-muted">You can upload up to 6 extra images; they will show as a gallery on the product page.</small>
-                            </div>
+                            <!-- Media inputs moved to the right column -->
                         </div>
                         
                         <div class="col-md-4 product-form-preview">
                             <div class="admin-card">
-                                <h6 class="mb-3">Image Preview & Cropper</h6>
-                                
-                                <!-- Image Upload Area -->
-                                <div id="uploadArea" class="mb-3" style="display: none;">
-                                    <div style="max-width: 100%; margin-bottom: 1rem;">
-                                        <img id="imagePreview" style="max-width: 100%; display: block;">
-                                    </div>
-                                    <div class="d-grid gap-2">
-                                        <button type="button" class="btn btn-primary btn-sm" id="cropBtn" style="display: none;">
-                                            <i class="bi bi-scissors"></i> Crop Image
-                                        </button>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="cancelCropBtn" style="display: none;">
-                                            Cancel
-                                        </button>
-                                    </div>
+                                <h6 class="mb-3">Media Upload (Crop + Preview)</h6>
+
+                                <!-- Primary image input -->
+                                <div class="mb-3">
+                                    <label for="imageFile" class="form-label">Primary Image (will be cropped)</label>
+                                    <input type="file" class="form-control" id="imageFile" name="image" accept="image/*">
+                                    <small class="text-muted">Pick an image -> crop in popup -> preview below.</small>
                                 </div>
-                                
-                                <!-- Current Image Display -->
-                                <div id="currentImagePreview" style="width: 100%; height: 300px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 1rem;">
-                                    <img id="previewImg" src="<%= product ? product.image : 'https://via.placeholder.com/400x600?text=Product+Image' %>" 
-                                         alt="Preview" style="max-width: 100%; max-height: 100%; object-fit: cover;">
+
+                                <!-- Hidden input for primary cropped image -->
+                                <input type="hidden" id="croppedImage" name="croppedImage">
+
+                                <!-- Primary preview -->
+                                <div id="primaryPreviewWrap" style="position:relative; width: 100%; height: 220px; background: #f5f5f5; border-radius: 10px; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px solid #eee; margin-bottom: 14px;">
+                                    <img id="previewImg" src="<%= product ? product.image : '' %>" alt="Primary preview" style="width:100%;height:100%;object-fit:cover;display:<%= product && product.image ? 'block' : 'none' %>;">
+                                    <div id="primaryPreviewPlaceholder" style="text-align:center;color:#999;font-size:12px;padding:12px;<%= product && product.image ? 'display:none;' : '' %>">
+                                        No primary image
+                                    </div>
+                                    <button type="button" id="primaryRemoveBtn" class="btn btn-sm btn-outline-danger"
+                                        style="position:absolute;top:8px;right:8px;display:none;"
+                                        onclick="removePrimaryCropped()">
+                                        ×
+                                    </button>
                                 </div>
-                                
+
+                                <!-- Gallery input -->
+                                <div class="mb-3">
+                                    <label for="galleryFiles" class="form-label">Gallery Images (optional)</label>
+                                    <input type="file" class="form-control" id="galleryFiles" name="gallery" accept="image/*" multiple>
+                                    <small class="text-muted">Pick multiple -> crop one-by-one -> preview below.</small>
+                                </div>
+
+                                <!-- Hidden inputs container for gallery cropped images -->
+                                <div id="croppedGalleryInputs"></div>
+
                                 <!-- Existing gallery thumbnails -->
+                                
                                 <% if (typeof galleryImages !== 'undefined' && galleryImages && galleryImages.length > 0) { %>
                                     <div class="mb-3">
                                         <label class="form-label small">Existing gallery images</label>
@@ -199,6 +191,39 @@
                                         </div>
                                     </div>
                                 <% } %>
+
+                                <!-- Newly cropped gallery thumbnails (this edit/create session) -->
+                                <div class="mb-3" id="newGalleryThumbsSection" style="display:none;">
+                                    <label class="form-label small">New gallery images (after crop)</label>
+                                    <div class="d-flex flex-wrap gap-2" id="newGalleryThumbs"></div>
+                                </div>
+
+                                <!-- Product video input -->
+                                <div class="mb-3">
+                                    <label for="videoFile" class="form-label">Product Video (optional)</label>
+                                    <input type="file" class="form-control" id="videoFile" name="video" accept="video/mp4,video/webm">
+                                    <small class="text-muted">MP4/WebM only. Preview below after selection.</small>
+                                </div>
+
+                                <!-- Product video preview -->
+                                <div class="mb-3">
+                                    <label class="form-label small">Video Preview</label>
+                                    <div id="videoPreviewWrap" style="width: 100%; height: 240px; background: #f5f5f5; border-radius: 8px; border: 1px dashed #e5e5e5; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+                                        <div id="videoPlaceholder" style="text-align:center; padding: 14px; color:#777;">
+                                            <div style="font-weight:700;">No video selected</div>
+                                            <div style="font-size:12px; margin-top:6px;">MP4/WebM only</div>
+                                        </div>
+                                        <button type="button" id="videoRemoveBtn" class="btn btn-sm btn-outline-danger"
+                                            style="position:absolute;top:8px;right:8px;display:none;"
+                                            onclick="removeVideoSelection()">×</button>
+                                        <video
+                                            id="videoPreview"
+                                            controls
+                                            style="width: 100%; height: 100%; object-fit: cover; display: none;"
+                                            <% if (product && product.video_url) { %>src="<%= product.video_url %>"<% } %>
+                                        ></video>
+                                    </div>
+                                </div>
                                 
                                 <% if (product && product.qr_code) { %>
                                     <div class="mb-3 p-3" style="background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0;">
@@ -235,6 +260,27 @@
     </div>
 </div>
 
+<!-- Cropper Modal -->
+<div id="cropModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;backdrop-filter:blur(3px);"></div>
+<div id="cropModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2005;width:92%;max-width:720px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 20px 70px rgba(0,0,0,.35);">
+  <div style="padding:16px 18px;border-bottom:1px solid #f1e7dd;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;flex-direction:column;gap:2px;">
+      <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#c37a45;">Crop</div>
+      <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:20px;color:var(--ink);">Select crop area</div>
+    </div>
+    <button type="button" id="cropModalClose" aria-label="Close" style="border:none;background:rgba(15,12,10,0.04);width:34px;height:34px;border-radius:999px;cursor:pointer;font-size:18px;">×</button>
+  </div>
+  <div style="padding:14px 18px;max-height:70vh;overflow:auto;">
+    <img id="cropModalImage" style="max-width:100%;display:block;">
+  </div>
+  <div style="padding:14px 18px;border-top:1px solid #f1e7dd;display:flex;gap:10px;justify-content:flex-end;">
+    <button type="button" class="btn btn-outline-secondary" id="cropModalCancel" style="border-radius:12px;">Cancel</button>
+    <button type="button" class="btn btn-primary" id="cropModalConfirm" style="border-radius:12px;">
+      <i class="bi bi-scissors"></i> Crop & Save
+    </button>
+  </div>
+</div>
+
 <script>
 document.getElementById('is_personalized') && document.getElementById('is_personalized').addEventListener('change', function() {
     document.getElementById('personalizationTypeWrap').style.display = this.checked ? 'block' : 'none';
@@ -242,6 +288,67 @@ document.getElementById('is_personalized') && document.getElementById('is_person
 document.getElementById('is_hamper_item') && document.getElementById('is_hamper_item').addEventListener('change', function() {
     document.getElementById('hamperGenderWrap').style.display = this.checked ? 'block' : 'none';
 });
+
+// Show selected occasion labels (Amazon-like "chips")
+const occasionSelect = document.getElementById('occasion');
+const occasionSelectedLabels = document.getElementById('occasionSelectedLabels');
+function renderOccasionLabels() {
+    if (!occasionSelect || !occasionSelectedLabels) return;
+    const selected = Array.from(occasionSelect.selectedOptions || []).map(o => o.textContent.trim()).filter(Boolean);
+    occasionSelectedLabels.innerHTML = '';
+    if (!selected.length) {
+        occasionSelectedLabels.innerHTML = '<span style="color:#888;font-size:12px;">No occasions selected</span>';
+        return;
+    }
+    selected.forEach(name => {
+        const chip = document.createElement('span');
+        chip.className = 'badge';
+        chip.style.background = 'var(--accentbg, rgba(196,98,45,.12))';
+        chip.style.border = '1px solid rgba(196,98,45,.35)';
+        chip.style.color = 'var(--accent, #C4622D)';
+        chip.style.borderRadius = '999px';
+        chip.style.padding = '6px 10px';
+        chip.style.fontSize = '12px';
+        chip.style.fontWeight = '600';
+        chip.textContent = name;
+        occasionSelectedLabels.appendChild(chip);
+    });
+}
+if (occasionSelect) {
+    occasionSelect.addEventListener('change', renderOccasionLabels);
+    renderOccasionLabels(); // initial render (edit mode too)
+}
+
+// Gallery cropping is handled inside the Cropper.js script below.
+
+// Live preview for selected product video
+const videoFileInput = document.getElementById('videoFile');
+const videoPreview = document.getElementById('videoPreview');
+const videoPlaceholder = document.getElementById('videoPlaceholder');
+if (videoFileInput && videoPreview) {
+    videoFileInput.addEventListener('change', function () {
+        const file = (this.files && this.files[0]) ? this.files[0] : null;
+        if (!file) {
+            videoPreview.src = '';
+            videoPreview.style.display = 'none';
+            if (videoPlaceholder) videoPlaceholder.style.display = 'block';
+            return;
+        }
+
+        const url = URL.createObjectURL(file);
+        videoPreview.src = url;
+        videoPreview.style.display = 'block';
+        if (videoPlaceholder) videoPlaceholder.style.display = 'none';
+    });
+}
+
+// If editing and existing video exists, show it by default
+<% if (product && product.video_url) { %>
+    (function () {
+        if (videoPreview) videoPreview.style.display = 'block';
+        if (videoPlaceholder) videoPlaceholder.style.display = 'none';
+    })();
+<% } %>
 </script>
 
 <!-- Cropper.js CSS -->
@@ -354,13 +461,93 @@ document.getElementById('is_hamper_item') && document.getElementById('is_hamper_
     let cropper;
     let imageFileInput = document.getElementById('imageFile');
     let imageUrlInput = document.getElementById('image');
-    let imagePreview = document.getElementById('imagePreview');
+    let imagePreview = document.getElementById('cropModalImage');
     let previewImg = document.getElementById('previewImg');
-    let uploadArea = document.getElementById('uploadArea');
-    let currentImagePreview = document.getElementById('currentImagePreview');
-    let cropBtn = document.getElementById('cropBtn');
-    let cancelCropBtn = document.getElementById('cancelCropBtn');
+    // Reuse existing cropper logic but wire it to the modal instead of the right-side inline UI
+    let uploadArea = document.getElementById('cropModalOverlay'); // overlay
+    let currentImagePreview = document.getElementById('primaryPreviewWrap'); // wrapper
+    let cropBtn = document.getElementById('cropModalConfirm');
+    let cancelCropBtn = document.getElementById('cropModalCancel');
     let croppedImageInput = document.getElementById('croppedImage');
+    let primaryRemoveBtn = document.getElementById('primaryRemoveBtn');
+    let primaryPreviewPlaceholder = document.getElementById('primaryPreviewPlaceholder');
+    const initialPrimarySrc = previewImg ? String(previewImg.getAttribute('src') || '') : '';
+
+    // Primary vs Gallery crop mode
+    let cropMode = 'primary'; // 'primary' | 'gallery'
+    let galleryQueue = [];
+    let galleryIndex = 0;
+    let galleryFilesInput = document.getElementById('galleryFiles');
+    let croppedGalleryInputs = document.getElementById('croppedGalleryInputs');
+    let newGalleryThumbsSection = document.getElementById('newGalleryThumbsSection');
+    let newGalleryThumbs = document.getElementById('newGalleryThumbs');
+
+    function resetGalleryCrops() {
+        galleryQueue = [];
+        galleryIndex = 0;
+        if (croppedGalleryInputs) croppedGalleryInputs.innerHTML = '';
+        if (newGalleryThumbs) newGalleryThumbs.innerHTML = '';
+        if (newGalleryThumbsSection) newGalleryThumbsSection.style.display = 'none';
+    }
+
+    function initCropperFromDataUrl(dataUrl) {
+        if (!imagePreview) return;
+        imagePreview.src = dataUrl;
+        if (uploadArea) uploadArea.style.display = 'block';
+        const modalEl = document.getElementById('cropModal');
+        if (modalEl) modalEl.style.display = 'block';
+        if (currentImagePreview) currentImagePreview.style.display = 'none';
+
+        if (cropper) {
+            cropper.destroy();
+        }
+
+        cropper = new Cropper(imagePreview, {
+            aspectRatio: 2 / 3, // Product image ratio
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 0.8,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+        });
+
+        if (cropBtn) cropBtn.style.display = 'block';
+        if (cancelCropBtn) cancelCropBtn.style.display = 'block';
+    }
+
+    // Gallery images: open cropper popup first, then store cropped base64
+    if (galleryFilesInput) {
+        galleryFilesInput.addEventListener('change', function(e) {
+            const files = Array.from(this.files || []);
+            if (!files.length) return;
+
+            if (files.length > 4) {
+                alert('You can upload up to 4 gallery images (total 5 images including the primary image).');
+                this.value = '';
+                return;
+            }
+
+            // Stop raw files from being submitted; we submit base64 instead.
+            this.value = '';
+
+            resetGalleryCrops();
+            galleryQueue = files;
+            galleryIndex = 0;
+            cropMode = 'gallery';
+
+            const file = galleryQueue[galleryIndex];
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                initCropperFromDataUrl(ev.target.result);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
     
     // Handle file upload
     imageFileInput.addEventListener('change', function(e) {
@@ -368,65 +555,52 @@ document.getElementById('is_hamper_item') && document.getElementById('is_hamper_
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                imagePreview.src = e.target.result;
-                uploadArea.style.display = 'block';
-                currentImagePreview.style.display = 'none';
+                cropMode = 'primary';
+                initCropperFromDataUrl(e.target.result);
                 
-                // Initialize cropper
-                if (cropper) {
-                    cropper.destroy();
-                }
-                
-                cropper = new Cropper(imagePreview, {
-                    aspectRatio: 2 / 3, // Product image ratio
-                    viewMode: 1,
-                    dragMode: 'move',
-                    autoCropArea: 0.8,
-                    restore: false,
-                    guides: true,
-                    center: true,
-                    highlight: false,
-                    cropBoxMovable: true,
-                    cropBoxResizable: true,
-                    toggleDragModeOnDblclick: false,
-                });
-                
-                cropBtn.style.display = 'block';
-                cancelCropBtn.style.display = 'block';
             };
             reader.readAsDataURL(file);
         }
     });
     
-    // Handle URL input
-    imageUrlInput.addEventListener('input', function(e) {
-        if (e.target.value && e.target.value.startsWith('http')) {
-            previewImg.src = e.target.value;
-            uploadArea.style.display = 'none';
-            currentImagePreview.style.display = 'flex';
-            imageFileInput.value = '';
-            croppedImageInput.value = '';
-        }
-    });
+    // Handle URL input (optional legacy field). UI currently removed,
+    // but keep guard so JS doesn't crash if element doesn't exist.
+    if (imageUrlInput) {
+        imageUrlInput.addEventListener('input', function(e) {
+            if (e.target.value && e.target.value.startsWith('http')) {
+                previewImg.src = e.target.value;
+                uploadArea.style.display = 'none';
+                currentImagePreview.style.display = 'flex';
+                imageFileInput.value = '';
+                croppedImageInput.value = '';
+            }
+        });
+    }
     
-    // Crop button
+    // Crop button (primary + gallery)
     cropBtn.addEventListener('click', function() {
-        if (cropper) {
-            const canvas = cropper.getCroppedCanvas({
-                width: 800,
-                height: 1200,
-                imageSmoothingEnabled: true,
-                imageSmoothingQuality: 'high'
-            });
-            
-            const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        if (!cropper) return;
+
+        const canvas = cropper.getCroppedCanvas({
+            width: 800,
+            height: 1200,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high'
+        });
+        
+        const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+        if (cropMode === 'primary') {
             croppedImageInput.value = croppedDataUrl;
-            
-            // Update preview
+            // Update primary preview
             previewImg.src = croppedDataUrl;
-            uploadArea.style.display = 'none';
-            currentImagePreview.style.display = 'flex';
-            
+            if (previewImg) previewImg.style.display = 'block';
+            if (primaryRemoveBtn) primaryRemoveBtn.style.display = 'block';
+            if (primaryPreviewPlaceholder) primaryPreviewPlaceholder.style.display = 'none';
+            if (uploadArea) uploadArea.style.display = 'none';
+            const modalEl = document.getElementById('cropModal');
+            if (modalEl) modalEl.style.display = 'none';
+            if (currentImagePreview) currentImagePreview.style.display = 'flex';
             // Clear file input
             imageFileInput.value = '';
             
@@ -436,6 +610,67 @@ document.getElementById('is_hamper_item') && document.getElementById('is_hamper_
             
             cropBtn.style.display = 'none';
             cancelCropBtn.style.display = 'none';
+            cropMode = 'primary';
+            return;
+        }
+
+        if (cropMode === 'gallery') {
+            // Store base64 into hidden inputs
+            if (croppedGalleryInputs) {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'croppedGalleryImages';
+                hidden.value = croppedDataUrl;
+                croppedGalleryInputs.appendChild(hidden);
+            }
+
+            // Update new gallery thumbnail list
+            if (newGalleryThumbs) {
+                if (newGalleryThumbsSection) newGalleryThumbsSection.style.display = 'block';
+                const wrapper = document.createElement('div');
+                wrapper.style.width = '70px';
+                wrapper.style.height = '70px';
+                wrapper.style.borderRadius = '6px';
+                wrapper.style.overflow = 'hidden';
+                wrapper.style.border = '1px solid #eee';
+
+                const img = document.createElement('img');
+                img.src = croppedDataUrl;
+                img.alt = '';
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+
+                wrapper.appendChild(img);
+                newGalleryThumbs.appendChild(wrapper);
+            }
+
+            // Move to next gallery image (if any)
+            cropper.destroy();
+            cropper = null;
+
+            cropBtn.style.display = 'none';
+            cancelCropBtn.style.display = 'none';
+
+            galleryIndex++;
+            if (galleryIndex < galleryQueue.length) {
+                const nextFile = galleryQueue[galleryIndex];
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    // Keep popup open for next crop
+                    uploadArea.style.display = 'block';
+                    currentImagePreview.style.display = 'none';
+                    initCropperFromDataUrl(ev.target.result);
+                };
+                reader.readAsDataURL(nextFile);
+            } else {
+                // Done cropping gallery
+                if (uploadArea) uploadArea.style.display = 'none';
+                const modalEl = document.getElementById('cropModal');
+                if (modalEl) modalEl.style.display = 'none';
+                if (currentImagePreview) currentImagePreview.style.display = 'flex';
+                cropMode = 'primary';
+            }
         }
     });
     
@@ -445,12 +680,52 @@ document.getElementById('is_hamper_item') && document.getElementById('is_hamper_
             cropper.destroy();
             cropper = null;
         }
-        uploadArea.style.display = 'none';
-        currentImagePreview.style.display = 'flex';
-        imageFileInput.value = '';
+
+        if (uploadArea) uploadArea.style.display = 'none';
+        const modalEl = document.getElementById('cropModal');
+        if (modalEl) modalEl.style.display = 'none';
+        if (currentImagePreview) currentImagePreview.style.display = 'flex';
+
         cropBtn.style.display = 'none';
         cancelCropBtn.style.display = 'none';
+
+        if (cropMode === 'primary') {
+            imageFileInput.value = '';
+        } else if (cropMode === 'gallery') {
+            // Abort gallery cropping session
+            if (galleryFilesInput) galleryFilesInput.value = '';
+            resetGalleryCrops();
+        }
+
+        cropMode = 'primary';
     });
+
+    // Close crop modal via "X" and clicking outside the modal
+    const cropModalCloseBtn = document.getElementById('cropModalClose');
+    if (cropModalCloseBtn && cancelCropBtn) {
+        cropModalCloseBtn.addEventListener('click', function () {
+            cancelCropBtn.click();
+        });
+    }
+    if (uploadArea && cancelCropBtn) {
+        uploadArea.addEventListener('click', function (e) {
+            if (e.target === uploadArea) cancelCropBtn.click();
+        });
+    }
+
+    // Restore/remove primary cropped image (used by the × button)
+    window.removePrimaryCropped = function () {
+        if (croppedImageInput) croppedImageInput.value = '';
+        if (previewImg) {
+            previewImg.src = initialPrimarySrc || '';
+            previewImg.style.display = initialPrimarySrc ? 'block' : 'none';
+        }
+        if (primaryPreviewPlaceholder) primaryPreviewPlaceholder.style.display = initialPrimarySrc ? 'none' : 'block';
+        if (primaryRemoveBtn) primaryRemoveBtn.style.display = initialPrimarySrc ? 'block' : 'none';
+    };
+
+    // Show remove cross if primary image already exists (edit mode)
+    if (initialPrimarySrc && primaryRemoveBtn) primaryRemoveBtn.style.display = 'block';
     
     // Print QR Code Sticker Function
     window.printQRCode = function(qrCode, title, category, price, productId, image) {

@@ -1,44 +1,39 @@
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '..', 'uploads', 'products');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+// Keep files in memory; the controller uploads buffers to S3.
+const storage = multer.memoryStorage();
 
-// Configure storage
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadsDir);
-  },
-  filename: function (req, file, cb) {
-    // Generate unique filename: timestamp-random-originalname
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, 'product-' + uniqueSuffix + ext);
-  }
-});
-
-// File filter - only images
+// File filter - allow product images + a single mp4 video
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|webp/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
+  const lowerOriginal = String(file.originalname || '').toLowerCase();
+  const ext = path.extname(lowerOriginal);
+  const mimetype = String(file.mimetype || '').toLowerCase();
 
-  if (mimetype && extname) {
+  const isImage =
+    ['.jpeg', '.jpg', '.png', '.gif', '.webp'].includes(ext) ||
+    mimetype.startsWith('image/');
+
+  const isMp4 = ext === '.mp4' || mimetype === 'video/mp4' || mimetype.includes('mp4');
+  const isWebm = ext === '.webm' || mimetype === 'video/webm' || mimetype.includes('webm');
+
+  if (isImage || isMp4 || isWebm) {
     return cb(null, true);
-  } else {
-    cb(new Error('Only image files are allowed (jpeg, jpg, png, gif, webp)'));
   }
+
+  cb(
+    new Error(
+      'Invalid file type. Allowed: images (jpeg/jpg/png/gif/webp) and mp4 video.'
+    )
+  );
 };
 
 // Configure multer
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    // Keep this high enough for videos; images are typically much smaller.
+    fileSize: 50 * 1024 * 1024 // 50MB max per file
   },
   fileFilter: fileFilter
 });

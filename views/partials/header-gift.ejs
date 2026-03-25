@@ -31,30 +31,29 @@ document.addEventListener('DOMContentLoaded', function(){ showToast('<%= (flash.
 <% } %>
 </script>
 
-<!-- Auth modal (login / signup) -->
+<!-- Auth modals (Sign in / Sign up separately) -->
 <div id="authModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.50);backdrop-filter:blur(4px);z-index:980;"></div>
-<div id="authModal" style="display:none;position:fixed;inset:0;z-index:985;align-items:center;justify-content:center;padding:16px;">
+
+<!-- Sign in modal -->
+<div id="authLoginModal" style="display:none;position:fixed;inset:0;z-index:985;align-items:center;justify-content:center;padding:16px;">
   <div style="background:#fff;border-radius:22px;max-width:440px;width:100%;box-shadow:0 22px 60px rgba(0,0,0,.30);overflow:hidden;border:1px solid rgba(0,0,0,.04);">
     <div style="padding:18px 22px;border-bottom:1px solid #f1e7dd;display:flex;justify-content:space-between;align-items:center;">
       <div style="display:flex;flex-direction:column;gap:2px;">
         <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#c37a45;">Welcome</div>
         <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:20px;color:var(--ink);">Sign in to GiftHouse</div>
       </div>
-      <button type="button" id="authModalClose" aria-label="Close" style="border:none;background:rgba(15,12,10,0.04);width:30px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:#3b2a20;">×</button>
-    </div>
-    <div style="display:flex;border-bottom:1px solid #f1e7dd;">
-      <button type="button" id="authTabLogin" style="flex:1;padding:10px 0;border:none;background:#fff;font-size:14px;font-weight:600;border-bottom:2px solid var(--ink);cursor:pointer;transition:background .18s,color .18s;border-radius:0;">Login</button>
-      <button type="button" id="authTabRegister" style="flex:1;padding:10px 0;border:none;background:#fff;font-size:14px;font-weight:500;border-bottom:2px solid transparent;cursor:pointer;transition:background .18s,color .18s;border-radius:0;">Create Account</button>
+      <button type="button" id="authLoginModalClose" aria-label="Close" style="border:none;background:rgba(15,12,10,0.04);width:30px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:#3b2a20;">×</button>
     </div>
     <div style="padding:18px 22px 20px;max-height:70vh;overflow:auto;">
-      <!-- Login form -->
       <form id="authLoginForm" action="/auth/login" method="POST">
         <%- include('../partials/csrf-token') %>
         <div style="margin-bottom:14px;font-size:13px;color:var(--muted);">Sign in to manage your orders, save addresses and track your hampers.</div>
+
         <div style="margin-bottom:12px;">
           <label style="font-size:13px;font-weight:500;color:var(--ink2);">Email</label>
           <input type="email" name="email" required autocomplete="email" placeholder="you@example.com" style="width:100%;padding:9px 11px;border-radius:11px;border:1px solid var(--border2);font-size:13px;outline:none;">
         </div>
+
         <div style="margin-bottom:16px;">
           <label style="font-size:13px;font-weight:500;color:var(--ink2);">Password</label>
           <input type="password" name="password" required minlength="6" autocomplete="current-password" placeholder="Enter your password" style="width:100%;padding:9px 11px;border-radius:11px;border:1px solid var(--border2);font-size:13px;outline:none;">
@@ -63,34 +62,70 @@ document.addEventListener('DOMContentLoaded', function(){ showToast('<%= (flash.
             <a href="/forgot-password" style="color:var(--ink);text-decoration:none;font-weight:500;">Forgot?</a>
           </div>
         </div>
+
         <button type="submit" style="width:100%;padding:11px 0;border:none;border-radius:999px;background:var(--ink);color:#fff;font-weight:600;font-size:14px;cursor:pointer;box-shadow:0 10px 26px rgba(0,0,0,.18);">Login</button>
+
+        <!-- Extra Create Account button (requested) -->
+        <div style="margin-top:10px;">
+          <button
+            type="button"
+            style="width:100%;padding:10px 0;border:1px solid rgba(0,0,0,.08);border-radius:999px;background:#fff;color:var(--ink);font-weight:600;font-size:14px;cursor:pointer;box-shadow:none;"
+            onclick="window.__giftAuthOpen && window.__giftAuthOpen('register')"
+          >Create Account</button>
+        </div>
+
         <div style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center;">
           New to GiftHouse?
           <button type="button" style="border:none;background:none;color:var(--ink);font-weight:600;cursor:pointer;padding:0 2px;" onclick="window.__giftAuthOpen && window.__giftAuthOpen('register')">Create an account</button>
         </div>
       </form>
-      <!-- Register form -->
-      <form id="authRegisterForm" action="/auth/register" method="POST" style="display:none;margin-top:2px;">
+    </div>
+  </div>
+</div>
+
+<!-- Sign up modal -->
+<div id="authRegisterModal" style="display:none;position:fixed;inset:0;z-index:985;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:22px;max-width:440px;width:100%;box-shadow:0 22px 60px rgba(0,0,0,.30);overflow:hidden;border:1px solid rgba(0,0,0,.04);">
+    <div style="padding:18px 22px;border-bottom:1px solid #f1e7dd;display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#c37a45;">Welcome</div>
+        <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:20px;color:var(--ink);">Create your GiftHouse account</div>
+      </div>
+      <button type="button" id="authRegisterModalClose" aria-label="Close" style="border:none;background:rgba(15,12,10,0.04);width:30px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:#3b2a20;">×</button>
+    </div>
+    <div style="padding:18px 22px 20px;max-height:70vh;overflow:auto;">
+      <form id="authRegisterForm" action="/auth/register" method="POST">
         <%- include('../partials/csrf-token') %>
         <div style="margin-bottom:14px;font-size:13px;color:var(--muted);">Create your account to save favourites, remember details and checkout faster.</div>
+
         <div style="margin-bottom:10px;">
           <label style="font-size:13px;font-weight:500;color:var(--ink2);">Full Name</label>
           <input type="text" name="name" required autocomplete="name" placeholder="Your full name" style="width:100%;padding:9px 11px;border-radius:11px;border:1px solid var(--border2);font-size:13px;outline:none;">
         </div>
+
         <div style="margin-bottom:10px;">
           <label style="font-size:13px;font-weight:500;color:var(--ink2);">Email</label>
           <input type="email" name="email" required autocomplete="email" placeholder="you@example.com" style="width:100%;padding:9px 11px;border-radius:11px;border:1px solid var(--border2);font-size:13px;outline:none;">
         </div>
+
         <div style="margin-bottom:10px;">
           <label style="font-size:13px;font-weight:500;color:var(--ink2);">Phone (10‑digit)</label>
           <input type="tel" name="phone" pattern="[0-9]{10}" maxlength="10" autocomplete="tel" placeholder="9876543210" style="width:100%;padding:9px 11px;border-radius:11px;border:1px solid var(--border2);font-size:13px;outline:none;">
         </div>
+
         <div style="margin-bottom:10px;">
           <label style="font-size:13px;font-weight:500;color:var(--ink2);">Password</label>
           <input type="password" name="password" required minlength="6" autocomplete="new-password" placeholder="Create a strong password" style="width:100%;padding:9px 11px;border-radius:11px;border:1px solid var(--border2);font-size:13px;outline:none;">
           <div style="margin-top:6px;font-size:11px;color:var(--muted);">At least 6 characters. Use a mix of letters and numbers.</div>
         </div>
+
+        <div style="margin-bottom:10px;">
+          <label style="font-size:13px;font-weight:500;color:var(--ink2);">Confirm Password</label>
+          <input type="password" name="confirmPassword" required minlength="6" autocomplete="new-password" placeholder="Re-enter your password" style="width:100%;padding:9px 11px;border-radius:11px;border:1px solid var(--border2);font-size:13px;outline:none;">
+        </div>
+
         <button type="submit" style="width:100%;padding:11px 0;border:none;border-radius:999px;background:var(--ink);color:#fff;font-weight:600;font-size:14px;cursor:pointer;box-shadow:0 10px 26px rgba(0,0,0,.18);">Create account</button>
+
         <div style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center;">
           Already have an account?
           <button type="button" style="border:none;background:none;color:var(--ink);font-weight:600;cursor:pointer;padding:0 2px;" onclick="window.__giftAuthOpen && window.__giftAuthOpen('login')">Log in</button>
@@ -103,37 +138,22 @@ document.addEventListener('DOMContentLoaded', function(){ showToast('<%= (flash.
 <script>
   (function(){
     var overlay = document.getElementById('authModalOverlay');
-    var modal = document.getElementById('authModal');
-    var btnClose = document.getElementById('authModalClose');
-    var tabLogin = document.getElementById('authTabLogin');
-    var tabRegister = document.getElementById('authTabRegister');
-    var formLogin = document.getElementById('authLoginForm');
-    var formRegister = document.getElementById('authRegisterForm');
+    var modalLogin = document.getElementById('authLoginModal');
+    var modalRegister = document.getElementById('authRegisterModal');
+    var btnCloseLogin = document.getElementById('authLoginModalClose');
+    var btnCloseRegister = document.getElementById('authRegisterModalClose');
     function openModal(mode){
-      if(!overlay || !modal) return;
+      if(!overlay) return;
       overlay.style.display = 'block';
-      modal.style.display = 'flex';
+      if(modalLogin) modalLogin.style.display = mode === 'login' ? 'flex' : 'none';
+      if(modalRegister) modalRegister.style.display = mode === 'register' ? 'flex' : 'none';
       document.body.style.overflow = 'hidden';
-      if(mode === 'register'){
-        formLogin.style.display = 'none';
-        formRegister.style.display = 'block';
-        tabLogin.style.borderBottomColor = 'transparent';
-        tabRegister.style.borderBottomColor = getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#C4622D';
-        tabLogin.style.fontWeight = '500';
-        tabRegister.style.fontWeight = '600';
-      } else {
-        formLogin.style.display = 'block';
-        formRegister.style.display = 'none';
-        tabLogin.style.borderBottomColor = getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#C4622D';
-        tabRegister.style.borderBottomColor = 'transparent';
-        tabLogin.style.fontWeight = '600';
-        tabRegister.style.fontWeight = '500';
-      }
     }
     function closeModal(){
-      if(!overlay || !modal) return;
+      if(!overlay) return;
       overlay.style.display = 'none';
-      modal.style.display = 'none';
+      if(modalLogin) modalLogin.style.display = 'none';
+      if(modalRegister) modalRegister.style.display = 'none';
       document.body.style.overflow = '';
     }
     document.addEventListener('click', function(e){
@@ -143,10 +163,9 @@ document.addEventListener('DOMContentLoaded', function(){ showToast('<%= (flash.
         openModal('login');
       }
     });
-    if(btnClose) btnClose.addEventListener('click', closeModal);
+    if(btnCloseLogin) btnCloseLogin.addEventListener('click', closeModal);
+    if(btnCloseRegister) btnCloseRegister.addEventListener('click', closeModal);
     if(overlay) overlay.addEventListener('click', closeModal);
-    if(tabLogin) tabLogin.addEventListener('click', function(){ openModal('login'); });
-    if(tabRegister) tabRegister.addEventListener('click', function(){ openModal('register'); });
     // Close on Esc
     document.addEventListener('keydown', function(e){
       if(e.key === 'Escape'){ closeModal(); }

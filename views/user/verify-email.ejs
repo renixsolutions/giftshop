@@ -1,0 +1,62 @@
+<%- include('../partials/header-gift') %>
+<%- include('../partials/navbar-gift', {
+  currentPage: 'auth',
+  cartCount: typeof cartCount !== 'undefined' ? cartCount : 0,
+  userId: typeof userId !== 'undefined' ? userId : null
+}) %>
+
+<div class="container mt-5 mb-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-lg border-0" style="border-radius:20px; overflow:hidden;">
+        <div class="card-body p-5">
+          <div class="text-center mb-4">
+            <div style="width: 90px; height: 90px; background: linear-gradient(135deg, var(--veera-accent) 0%, var(--veera-accent-dark) 100%); border-radius: 50%; display:inline-flex; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(212,165,116,.30); margin-bottom:2rem;">
+              <i class="bi bi-envelope-check" style="font-size:2.5rem; color:white;"></i>
+            </div>
+            <h2 class="card-title mb-2" style="font-family:'Playfair Display',serif; font-size:2rem; color:var(--veera-black);">
+              Verify your email
+            </h2>
+            <p class="text-muted" style="color:var(--veera-gray);">Two-step account setup</p>
+          </div>
+
+          <% if (typeof flash !== 'undefined' && flash) { %>
+            <div class="alert alert-<%= flash.type === 'error' ? 'danger' : 'success' %> alert-dismissible fade show" role="alert">
+              <%= flash.message %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          <% } %>
+
+          <p class="text-muted" style="line-height:1.7;">
+            We sent a verification link to:
+            <br />
+            <strong style="color:var(--ink2);"><%= email || '' %></strong>
+          </p>
+          <p class="text-muted" style="font-size:12px;line-height:1.6;">
+            If you created the account recently, check your inbox and verify your email. After verification, you can login.
+          </p>
+
+          <div class="d-grid gap-2 mt-3">
+            <form action="/auth/verify-email/resend" method="POST">
+              <%- include('../partials/csrf-token') %>
+              <input type="hidden" name="email" value="<%= email || '' %>">
+              <button type="submit" class="btn btn-gradient-modern" style="color:white !important; border:none; border-radius:12px; font-weight:600;">
+                Resend verification email
+              </button>
+            </form>
+            <a href="#" class="btn btn-outline-secondary" onclick="window.__giftAuthOpen && window.__giftAuthOpen('login'); return false;">
+              Go to Sign In
+            </a>
+          </div>
+
+          <p class="text-muted mt-3" style="font-size:12px; line-height:1.6;">
+            Tip: If you don’t see the email, check Spam/Promotions folder.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer-gift') %>
+

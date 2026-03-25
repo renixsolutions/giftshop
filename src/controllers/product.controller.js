@@ -3,6 +3,11 @@ const { setFlash } = require('../../libs/helpers');
 const { validateProduct } = require('../../utils/validators');
 const path = require('path');
 const fs = require('fs');
+const {
+  uploadBufferToS3,
+  parseDataUrl,
+  extensionFromContentType
+} = require('../../config/s3');
 
 // Generate unique QR code number
 const generateQRCodeNumber = () => {
@@ -650,6 +655,26 @@ const getProductDetails = async (req, res) => {
     const avgRating = totalRatings > 0
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalRatings
       : 0;
+
+    // Only users who purchased this product can review it
+    const userId = req.session && req.session.userId ? req.session.userId : null;
+    let canReview = false;
+    if (userId) {
+      const purchasedRow = await db('order_items')
+        .join('orders', 'order_items.order_id', 'orders.id')
+        .where('orders.user_id', userId)
+        .where('order_items.item_type', 'product')
+        .where('order_items.product_id', product.id)
+        .whereIn('orders.status', ['processing', 'shipped', 'delivered'])
+        .first();
+
+      if (purchasedRow) {
+        const existingUserReview = await db('reviews')
+          .where({ product_id: product.id, user_id: userId })
+          .first();
+        canReview = !existingUserReview;
+      }
+    }
     
     // Fetch additional images for gallery
     const galleryImages = await db('product_images')
@@ -677,6 +702,7 @@ const getProductDetails = async (req, res) => {
       reviews,
       avgRating: parseFloat(avgRating.toFixed(1)),
       totalRatings,
+      canReview,
       productOccasions,
       currentPage: 'collections'
     });
@@ -815,31 +841,62 @@ const adminCreateProduct = async (req, res) => {
     }
     
     let imageUrl = image || 'https://via.placeholder.com/400x600?text=Product+Image';
-    
-    // Handle uploaded file
-    if (req.file) {
-      imageUrl = `/uploads/products/${req.file.filename}`;
+    let videoUrl = null;
+
+    // Gallery count cap (5 images total => 1 primary + up to 4 gallery)
+    const uploadedGallery = req.files && req.files.gallery ? req.files.gallery : [];
+    const croppedGalleryImagesRaw = req.body.croppedGalleryImages;
+    const croppedGalleryImages = Array.isArray(croppedGalleryImagesRaw)
+      ? croppedGalleryImagesRaw
+      : (croppedGalleryImagesRaw ? [croppedGalleryImagesRaw] : []);
+
+    const incomingGalleryCount = croppedGalleryImages.length + uploadedGallery.length;
+    if (incomingGalleryCount > 4) {
+      setFlash(req, 'error', 'You can upload up to 4 gallery images (total 5 images).');
+      return res.redirect('/admin/products/new');
     }
-    
-    // Handle cropped image (base64)
-    if (croppedImage && croppedImage.startsWith('data:image')) {
+
+    // Handle primary image file upload (optional; when cropper is used, croppedImage is sent instead)
+    if (req.files && req.files.image && req.files.image.length > 0) {
+      const file = req.files.image[0];
+      const ext = extensionFromContentType(file.mimetype);
+      const key = `products/images/product-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+      imageUrl = await uploadBufferToS3({
+        buffer: file.buffer,
+        key,
+        contentType: file.mimetype
+      });
+    }
+
+    // Handle cropped image (base64) -> upload to S3
+    if (croppedImage && String(croppedImage).startsWith('data:image')) {
       try {
-        const base64Data = croppedImage.replace(/^data:image\/\w+;base64,/, '');
-        const buffer = Buffer.from(base64Data, 'base64');
-        const filename = `product-${Date.now()}-${Math.round(Math.random() * 1E9)}.jpg`;
-        const filepath = path.join(__dirname, '../../uploads/products', filename);
-        
-        // Ensure directory exists
-        const uploadsDir = path.join(__dirname, '../../uploads/products');
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
+        const parsed = parseDataUrl(croppedImage);
+        if (parsed) {
+          const buffer = Buffer.from(parsed.base64, 'base64');
+          const ext = extensionFromContentType(parsed.contentType);
+          const key = `products/images/product-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+          imageUrl = await uploadBufferToS3({
+            buffer,
+            key,
+            contentType: parsed.contentType
+          });
         }
-        
-        fs.writeFileSync(filepath, buffer);
-        imageUrl = `/uploads/products/${filename}`;
       } catch (err) {
-        console.error('Error saving cropped image:', err);
+        console.error('Error uploading cropped image to S3:', err);
       }
+    }
+
+    // Handle optional product video upload
+    if (req.files && req.files.video && req.files.video.length > 0) {
+      const file = req.files.video[0];
+      const ext = extensionFromContentType(file.mimetype);
+      const key = `products/videos/product-video-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+      videoUrl = await uploadBufferToS3({
+        buffer: file.buffer,
+        key,
+        contentType: file.mimetype
+      });
     }
     
     // Calculate discount percentage if original price is provided
@@ -884,6 +941,7 @@ const adminCreateProduct = async (req, res) => {
         original_price: originalPrice,
         discount_percentage: finalDiscount,
         image: imageUrl,
+        video_url: videoUrl,
         stock: parseInt(stock),
         category,
         qr_code: qrCodePath, // Store full path
@@ -937,14 +995,55 @@ const adminCreateProduct = async (req, res) => {
         await db('product_occasions').insert(occasionRows);
       }
     }
-    // Save additional gallery images (if uploaded via multi-upload)
-    if (newProductId && req.files && req.files.gallery && req.files.gallery.length > 0) {
-      const galleryRows = req.files.gallery.map((file, index) => ({
-        product_id: newProductId,
-        image_url: `/uploads/products/${file.filename}`,
-        sort_order: index
-      }));
-      await db('product_images').insert(galleryRows);
+    // Save additional gallery images (cropped base64 preferred)
+    if (newProductId) {
+      // 1) Cropped gallery images from the cropper popup
+      if (croppedGalleryImages.length > 0) {
+        const galleryRows = [];
+        for (let index = 0; index < croppedGalleryImages.length; index++) {
+          const dataUrl = croppedGalleryImages[index];
+          const parsed = parseDataUrl(dataUrl);
+          if (!parsed) continue;
+
+          const buffer = Buffer.from(parsed.base64, 'base64');
+          const ext = extensionFromContentType(parsed.contentType);
+          const key = `products/images/product-gallery-${Date.now()}-${index}-${Math.round(Math.random() * 1e9)}${ext}`;
+          const url = await uploadBufferToS3({
+            buffer,
+            key,
+            contentType: parsed.contentType
+          });
+          galleryRows.push({
+            product_id: newProductId,
+            image_url: url,
+            sort_order: index
+          });
+        }
+        if (galleryRows.length) {
+          await db('product_images').insert(galleryRows);
+        }
+      } else if (req.files && req.files.gallery && req.files.gallery.length > 0) {
+        // 2) Fallback: raw uploaded gallery files (old behavior)
+        const galleryRows = [];
+        for (let index = 0; index < req.files.gallery.length; index++) {
+          const file = req.files.gallery[index];
+          const ext = extensionFromContentType(file.mimetype);
+          const key = `products/images/product-gallery-${Date.now()}-${index}-${Math.round(Math.random() * 1e9)}${ext}`;
+          const url = await uploadBufferToS3({
+            buffer: file.buffer,
+            key,
+            contentType: file.mimetype
+          });
+          galleryRows.push({
+            product_id: newProductId,
+            image_url: url,
+            sort_order: index
+          });
+        }
+        if (galleryRows.length) {
+          await db('product_images').insert(galleryRows);
+        }
+      }
     }
     
     setFlash(req, 'success', 'Product created successfully!');
@@ -971,9 +1070,36 @@ const adminUpdateProduct = async (req, res) => {
     // Get existing product to preserve image if not changed
     const existingProduct = await db('products').where({ id }).first();
     let imageUrl = existingProduct?.image || 'https://via.placeholder.com/400x600?text=Product+Image';
+    let videoUrl = existingProduct?.video_url || null;
+
+    const uploadedGallery = req.files && req.files.gallery ? req.files.gallery : [];
+    const croppedGalleryImagesRaw = req.body.croppedGalleryImages;
+    const croppedGalleryImages = Array.isArray(croppedGalleryImagesRaw)
+      ? croppedGalleryImagesRaw
+      : (croppedGalleryImagesRaw ? [croppedGalleryImagesRaw] : []);
+    const uploadedPrimary = req.files && req.files.image ? req.files.image : [];
+    const uploadedVideo = req.files && req.files.video ? req.files.video : [];
+
+    // Enforce "5 images total": 1 primary + up to 4 gallery images
+    const incomingGalleryCount = croppedGalleryImages.length + uploadedGallery.length;
+    if (incomingGalleryCount > 0) {
+      const existingGalleryCountRow = await db('product_images')
+        .where({ product_id: id })
+        .count('id as count')
+        .first();
+      const existingGalleryCount = parseInt(existingGalleryCountRow?.count || 0, 10);
+      const existingPrimaryCount = existingProduct?.image ? 1 : 0;
+      const currentTotalImages = existingPrimaryCount + existingGalleryCount;
+      const maxAdditionalImages = 5 - currentTotalImages;
+
+      if (maxAdditionalImages <= 0 || incomingGalleryCount > maxAdditionalImages) {
+        setFlash(req, 'error', `You can only have up to 5 images per product (1 primary + 4 gallery).`);
+        return res.redirect(`/admin/products/${id}/edit`);
+      }
+    }
     
     // Handle uploaded file
-    if (req.file) {
+    if (uploadedPrimary.length > 0) {
       // Delete old image if it's a local file
       if (existingProduct?.image && existingProduct.image.startsWith('/uploads/')) {
         const oldImagePath = path.join(__dirname, '../..', existingProduct.image);
@@ -981,11 +1107,18 @@ const adminUpdateProduct = async (req, res) => {
           fs.unlinkSync(oldImagePath);
         }
       }
-      imageUrl = `/uploads/products/${req.file.filename}`;
+      const file = uploadedPrimary[0];
+      const ext = extensionFromContentType(file.mimetype);
+      const key = `products/images/product-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+      imageUrl = await uploadBufferToS3({
+        buffer: file.buffer,
+        key,
+        contentType: file.mimetype
+      });
     }
     
     // Handle cropped image (base64)
-    if (croppedImage && croppedImage.startsWith('data:image')) {
+    if (croppedImage && String(croppedImage).startsWith('data:image')) {
       try {
         // Delete old image if it's a local file
         if (existingProduct?.image && existingProduct.image.startsWith('/uploads/')) {
@@ -994,26 +1127,36 @@ const adminUpdateProduct = async (req, res) => {
             fs.unlinkSync(oldImagePath);
           }
         }
-        
-        const base64Data = croppedImage.replace(/^data:image\/\w+;base64,/, '');
-        const buffer = Buffer.from(base64Data, 'base64');
-        const filename = `product-${Date.now()}-${Math.round(Math.random() * 1E9)}.jpg`;
-        const filepath = path.join(__dirname, '../../uploads/products', filename);
-        
-        // Ensure directory exists
-        const uploadsDir = path.join(__dirname, '../../uploads/products');
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
+
+        const parsed = parseDataUrl(croppedImage);
+        if (parsed) {
+          const buffer = Buffer.from(parsed.base64, 'base64');
+          const ext = extensionFromContentType(parsed.contentType);
+          const key = `products/images/product-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+          imageUrl = await uploadBufferToS3({
+            buffer,
+            key,
+            contentType: parsed.contentType
+          });
         }
-        
-        fs.writeFileSync(filepath, buffer);
-        imageUrl = `/uploads/products/${filename}`;
       } catch (err) {
-        console.error('Error saving cropped image:', err);
+        console.error('Error uploading cropped image to S3:', err);
       }
     } else if (image && image.startsWith('http')) {
       // Use provided URL
       imageUrl = image;
+    }
+
+    // Handle optional video upload replacement
+    if (uploadedVideo.length > 0) {
+      const file = uploadedVideo[0];
+      const ext = extensionFromContentType(file.mimetype);
+      const key = `products/videos/product-video-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+      videoUrl = await uploadBufferToS3({
+        buffer: file.buffer,
+        key,
+        contentType: file.mimetype
+      });
     }
     
     // Calculate discount percentage if original price is provided
@@ -1056,6 +1199,7 @@ const adminUpdateProduct = async (req, res) => {
       original_price: originalPrice,
       discount_percentage: finalDiscount,
       image: imageUrl,
+      video_url: videoUrl,
       stock: parseInt(stock),
       category,
       qr_code: qrCode,
@@ -1087,20 +1231,60 @@ const adminUpdateProduct = async (req, res) => {
     }
     
     // Handle newly uploaded gallery images on edit
-    if (req.files && req.files.gallery && req.files.gallery.length > 0) {
+    if (croppedGalleryImages.length > 0 || (req.files && req.files.gallery && req.files.gallery.length > 0)) {
       // Determine current max sort_order
       const maxSort = await db('product_images')
         .where({ product_id: id })
         .max('sort_order as max_order')
         .first();
       let baseOrder = maxSort && maxSort.max_order != null ? maxSort.max_order + 1 : 0;
-      
-      const galleryRows = req.files.gallery.map((file, index) => ({
-        product_id: id,
-        image_url: `/uploads/products/${file.filename}`,
-        sort_order: baseOrder + index
-      }));
-      await db('product_images').insert(galleryRows);
+
+      const galleryRows = [];
+
+      if (croppedGalleryImages.length > 0) {
+        for (let index = 0; index < croppedGalleryImages.length; index++) {
+          const dataUrl = croppedGalleryImages[index];
+          const parsed = parseDataUrl(dataUrl);
+          if (!parsed) continue;
+
+          const buffer = Buffer.from(parsed.base64, 'base64');
+          const ext = extensionFromContentType(parsed.contentType);
+          const key = `products/images/product-gallery-${Date.now()}-${index}-${Math.round(Math.random() * 1e9)}${ext}`;
+          const url = await uploadBufferToS3({
+            buffer,
+            key,
+            contentType: parsed.contentType
+          });
+
+          galleryRows.push({
+            product_id: id,
+            image_url: url,
+            sort_order: baseOrder + index
+          });
+        }
+      } else {
+        // Fallback: raw uploaded gallery files (old behavior)
+        for (let index = 0; index < req.files.gallery.length; index++) {
+          const file = req.files.gallery[index];
+          const ext = extensionFromContentType(file.mimetype);
+          const key = `products/images/product-gallery-${Date.now()}-${index}-${Math.round(Math.random() * 1e9)}${ext}`;
+          const url = await uploadBufferToS3({
+            buffer: file.buffer,
+            key,
+            contentType: file.mimetype
+          });
+
+          galleryRows.push({
+            product_id: id,
+            image_url: url,
+            sort_order: baseOrder + index
+          });
+        }
+      }
+
+      if (galleryRows.length) {
+        await db('product_images').insert(galleryRows);
+      }
     }
     
     setFlash(req, 'success', 'Product updated successfully!');

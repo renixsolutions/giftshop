@@ -92,7 +92,14 @@
       <% products.slice(0, 4).forEach(function(p) { %>
     <a href="/products/<%= p.id %>" class="pcard">
       <div class="pcard-img" style="background:#FBF0E8;">
-        <% if (p.image) { %><img src="/uploads/<%= p.image %>" alt="" style="width:100%;height:100%;object-fit:cover;"><% } else { %>🎁<% } %>
+        <% if (p.image) { %>
+          <% const img = String(p.image).trim(); %>
+          <img
+            src="<%= (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/')) ? img : '/uploads/' + img %>"
+            alt=""
+            style="width:100%;height:100%;object-fit:cover;"
+          >
+        <% } else { %>🎁<% } %>
       </div>
       <div class="pcard-body">
         <div class="pcard-cat"><%= p.category || 'Gift' %></div>

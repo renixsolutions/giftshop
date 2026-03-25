@@ -132,7 +132,17 @@
               }
               var html = '';
               data.products.forEach(function (p) {
-                var img = p.image ? (p.image.startsWith('http') ? p.image : (p.image.startsWith('/') ? p.image : '/uploads/' + p.image)) : '';
+                var img = '';
+                if (p.image) {
+                  var im = String(p.image).trim();
+                  if (im.startsWith('http://') || im.startsWith('https://')) {
+                    img = im;
+                  } else if (im.startsWith('/')) {
+                    img = im;
+                  } else {
+                    img = '/uploads/' + im;
+                  }
+                }
                 html += '<a class="nav-search-item" href="/products/' + p.id + '">';
                 if (img) {
                   html += '<div class="nav-search-thumb"><img src="' + img + '" alt="' + (p.title || '') + '"></div>';
