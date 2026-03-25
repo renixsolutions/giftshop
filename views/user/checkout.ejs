@@ -14,6 +14,7 @@
         display:grid;
         grid-template-columns:minmax(0,1.1fr) 360px;
         gap:28px;
+        align-items:start;
     }
     @media(max-width:900px){
         .co-wrap{
@@ -29,7 +30,7 @@
         background:var(--card);
     }
     .co-main{
-        padding:32px 28px 40px 0;
+        padding:0;
     }
     .co-title{
         font-family:'Playfair Display',serif;
@@ -211,7 +212,7 @@
 
     /* Right sidebar */
     .co-sidebar{
-        padding:32px 28px;
+        padding:24px 24px;
         background:var(--warm);
         border-radius:22px;
         border:1px solid var(--border);
