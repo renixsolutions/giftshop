@@ -27,7 +27,9 @@ router.post(
   requireAdmin,
   upload.fields([
     { name: 'image', maxCount: 1 },
-    { name: 'gallery', maxCount: 6 }
+    // 5 images total => 1 primary image + up to 4 gallery images
+    { name: 'gallery', maxCount: 4 },
+    { name: 'video', maxCount: 1 }
   ]),
   csrfValidationAfterMulter,
   productController.adminCreateProduct
@@ -37,7 +39,9 @@ router.post(
   requireAdmin,
   upload.fields([
     { name: 'image', maxCount: 1 },
-    { name: 'gallery', maxCount: 6 }
+    // 5 images total => 1 primary image + up to 4 gallery images
+    { name: 'gallery', maxCount: 4 },
+    { name: 'video', maxCount: 1 }
   ]),
   csrfValidationAfterMulter,
   productController.adminUpdateProduct
