@@ -6,7 +6,7 @@
     <source src="/video/135875-764362174.mp4" type="video/mp4">
   </video>
   <div class="hero-inner">
-  <div>
+  <div data-aos="fade-right">
     <div class="hero-eyebrow"><span>✦</span> Curated Luxury Gift Experiences</div>
     <h1>Gifts That <i>Speak</i><br>From the Heart</h1>
     <p class="hero-sub">Bespoke hampers and luxury gift boxes, handcrafted for every moment that matters. Build your own or choose from our curated collections.</p>
@@ -21,7 +21,7 @@
       <div class="trust-item"><div class="trust-val">Same Day</div><div class="trust-lbl">Pan India delivery</div></div>
     </div>
   </div>
-  <div class="hero-mosaic">
+  <div class="hero-mosaic" data-aos="fade-left">
     <div class="mosaic-card mc-main">
       <div class="mc-icon-big">🎁</div>
       <div class="mc-main-txt">
@@ -38,17 +38,17 @@
 
 <div class="marquee-bar">
   <span class="marquee-inner">
-    ✦ FREE DELIVERY ON ORDERS ABOVE ₹999 <span class="marquee-sep">◆</span> SAME DAY DISPATCH BEFORE 2PM <span class="marquee-sep">◆</span> CUSTOM CORPORATE GIFTING <span class="marquee-sep">◆</span> PERSONALISED GIFT MESSAGES <span class="marquee-sep">◆</span> PREMIUM PACKAGING GUARANTEED <span class="marquee-sep">◆</span>
-    ✦ FREE DELIVERY ON ORDERS ABOVE ₹999 <span class="marquee-sep">◆</span> SAME DAY DISPATCH BEFORE 2PM <span class="marquee-sep">◆</span> CUSTOM CORPORATE GIFTING <span class="marquee-sep">◆</span> PERSONALISED GIFT MESSAGES <span class="marquee-sep">◆</span> PREMIUM PACKAGING GUARANTEED <span class="marquee-sep">◆</span>
+    ✦ 12K+ GIFTS DELIVERED <span class="marquee-sep">◆</span> 24-48 HRS DELIVERY ON AVAILABLE PRODUCTS <span class="marquee-sep">◆</span> CUSTOM CORPORATE GIFTING <span class="marquee-sep">◆</span> PERSONALISED GIFT MESSAGES <span class="marquee-sep">◆</span> PREMIUM PACKAGING GUARANTEED <span class="marquee-sep">◆</span> 10 to 15 DAYS DELIVERY ON CUSTOMIZED PRODUCTS <span class="marquee-sep">◆</span>
+    ✦ 12K+ GIFTS DELIVERED <span class="marquee-sep">◆</span> 24-48 HRS DELIVERY ON AVAILABLE PRODUCTS <span class="marquee-sep">◆</span> CUSTOM CORPORATE GIFTING <span class="marquee-sep">◆</span> PERSONALISED GIFT MESSAGES <span class="marquee-sep">◆</span> PREMIUM PACKAGING GUARANTEED <span class="marquee-sep">◆</span> 10 to 15 DAYS DELIVERY ON CUSTOMIZED PRODUCTS <span class="marquee-sep">◆</span>
   </span>
 </div>
 
 <div class="section">
-  <div class="sec-head">
+  <div class="sec-head" data-aos="fade-up">
     <div class="sec-tag">Shop by Category</div>
     <div class="sec-title">Everything for Every Moment</div>
   </div>
-  <div class="cat-strip">
+  <div class="cat-strip" data-aos="fade-up" data-aos-delay="100">
     <% if (typeof categories !== 'undefined' && categories.length) { %>
       <% categories.forEach(function(cat, i) { %>
       <a href="/catalog?category=<%= cat.slug || cat.name %>" class="cat-card">
@@ -69,11 +69,11 @@
 </div>
 
 <div class="section" style="padding-top:0;">
-  <div class="sec-head sec-head-row">
+  <div class="sec-head sec-head-row" data-aos="fade-up">
     <div><div class="sec-tag">Trending Now</div><div class="sec-title">Best-Selling Gift Boxes</div></div>
     <a href="/collections" class="see-all">See all products →</a>
   </div>
-  <div class="occ-tabs">
+  <div class="occ-tabs" data-aos="fade-up" data-aos-delay="100">
     <a href="/occasions" class="occ-pill occ-pill--primary" style="text-decoration:none;color:inherit;">All Occasions</a>
     <% if (typeof occasions !== 'undefined' && occasions && occasions.length) { %>
       <% occasions.slice(0,6).forEach(function(occ){ %>
@@ -87,7 +87,7 @@
       <a href="/occasions?occ=corporate" class="occ-pill" style="text-decoration:none;color:inherit;">Corporate 💼</a>
     <% } %>
   </div>
-  <div class="pgrid">
+  <div class="pgrid" data-aos="fade-up" data-aos-delay="200">
     <% if (typeof products !== 'undefined' && products.length) { %>
       <% products.slice(0, 4).forEach(function(p) { %>
     <a href="/products/<%= p.id %>" class="pcard">
@@ -121,8 +121,92 @@
   </div>
 </div>
 
+<div class="ad-banner-section" data-aos="fade-up">
+  <div class="ad-slider-container">
+    <div class="ad-slider-track" id="adSliderTrack">
+      <!-- Slide 1 -->
+      <div class="ad-slide">
+        <div class="ad-banner">
+          <div class="ad-banner-bg">
+            <img src="https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=2070&auto=format&fit=crop" alt="Thoughtful gifts">
+          </div>
+          <div class="ad-banner-shape">
+            <div class="ad-content">
+              <div class="ad-top">
+                Enriching Relationships <span>💗</span>
+              </div>
+              <div class="ad-bottom">
+                <div class="ad-words-stacked">
+                  Through<br>
+                  Thoughtful
+                </div>
+                <div class="ad-gift-block">
+                  <span>🎁</span> Gifts
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Slide 2 -->
+      <div class="ad-slide">
+        <div class="ad-banner">
+          <div class="ad-banner-bg">
+            <img src="https://images.unsplash.com/photo-1530103862676-de3c9de59f9e?q=80&w=2070&auto=format&fit=crop" alt="Celebrate Milestones">
+          </div>
+          <div class="ad-banner-shape" style="background: var(--accent);">
+            <div class="ad-content">
+              <div class="ad-top">
+                Celebrate Milestones <span>🥂</span>
+              </div>
+              <div class="ad-bottom">
+                <div class="ad-words-stacked">
+                  With Unforgettable<br>
+                  Surprises
+                </div>
+                <div class="ad-gift-block">
+                  <span>🎀</span> Moments
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Slide 3 -->
+      <div class="ad-slide">
+        <div class="ad-banner">
+          <div class="ad-banner-bg">
+            <img src="https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1974&auto=format&fit=crop" alt="Corporate Gifting">
+          </div>
+          <div class="ad-banner-shape" style="background: var(--blue);">
+            <div class="ad-content">
+              <div class="ad-top">
+                Corporate Gifting <span>💼</span>
+              </div>
+              <div class="ad-bottom">
+                <div class="ad-words-stacked">
+                  Leave a Lasting<br>
+                  Impression
+                </div>
+                <div class="ad-gift-block">
+                  <span>✨</span> Success
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ad-slider-dots">
+      <span class="ad-dot active" onclick="goToSlide(0)"></span>
+      <span class="ad-dot" onclick="goToSlide(1)"></span>
+      <span class="ad-dot" onclick="goToSlide(2)"></span>
+    </div>
+  </div>
+</div>
+
 <div class="build-band">
-  <div class="build-band-l">
+  <div class="build-band-l" data-aos="fade-right">
     <div class="build-eyebrow">✦ OUR SIGNATURE EXPERIENCE</div>
     <h2>Create Your <i>Dream</i><br>Hamper, Your Way</h2>
     <p>Every great gift starts with intent. Choose the box, pick the contents, add your personal touch — and we handle the rest, beautifully.</p>
@@ -134,7 +218,7 @@
     </div>
     <a href="/build-hamper" class="btn-solid" style="margin-top:4px;">Start Building Your Hamper →</a>
   </div>
-  <div class="build-band-r">
+  <div class="build-band-r" data-aos="fade-left" data-aos-delay="200">
     <div class="box-preview-card">
       <div class="box-preview-title">Your Custom Hamper Preview</div>
       <div class="box-items-wrap">
@@ -149,19 +233,31 @@
 </div>
 
 <div class="testi-section">
-  <div class="sec-head" style="text-align:center;">
+  <div class="sec-head" style="text-align:center;" data-aos="fade-up">
     <div class="sec-tag">What People Say</div>
     <div class="sec-title">Gifting Stories from Our Customers</div>
     <div class="sec-sub">Real experiences from real people who made someone's day extra special</div>
   </div>
-  <div class="tgrid">
+  <div class="tgrid" data-aos="fade-up" data-aos-delay="100">
     <div class="tcard"><div class="t-stars"><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span></div><div class="t-quote">"Built a custom hamper for my mum's birthday — the wooden box arrived so beautifully wrapped, she cried happy tears. Absolutely extraordinary service."</div><div class="t-author"><div class="t-av">P</div><div><div class="t-name">Priya Sharma</div><div class="t-city">Mumbai · Birthday Hamper</div></div></div></div>
     <div class="tcard"><div class="t-stars"><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span></div><div class="t-quote">"Ordered 50 corporate hampers for our annual gala. Every single one was perfect, packed with care. GiftHouse is now our go-to for company gifting."</div><div class="t-author"><div class="t-av">R</div><div><div class="t-name">Rahul Mehta</div><div class="t-city">Delhi · Corporate Order</div></div></div></div>
     <div class="tcard"><div class="t-stars"><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span><span class="t-star"></span></div><div class="t-quote">"The personalised photo card with the acrylic box was *chef's kiss*. My partner couldn't believe I put it together myself — it looked so professional."</div><div class="t-author"><div class="t-av">A</div><div><div class="t-name">Ananya Iyer</div><div class="t-city">Bangalore · Anniversary Box</div></div></div></div>
   </div>
 </div>
+<div class="video-ad-section" data-aos="fade-up">
+  <div class="video-ad-card">
+    <video class="video-ad-bg" autoplay muted loop playsinline>
+      <source src="/video/Aesthetic_Hamper_Item_Showcase_Video.mp4" type="video/mp4">
+    </video>
+    <div class="video-ad-overlay"></div>
+    <div class="video-ad-content">
+      <h2>Experience <span>Luxury.</span></h2>
+      <p>Watch how we craft memories with precision, passion, and perfect aesthetic detail.</p>
+    </div>
+  </div>
+</div>
 
-<div class="nl-section">
+<div class="nl-section" data-aos="zoom-in">
   <div class="nl-l">
     <h2>Stay in the loop<br>on gifting inspiration</h2>
     <p>New collections, seasonal offers and gifting ideas — straight to your inbox.</p>
@@ -177,5 +273,40 @@
 </div>
 
 <%- include('../partials/footer-gift') %>
+<script>
+  let currentAdSlide = 0;
+  const adTrack = document.getElementById('adSliderTrack');
+  const adDots = document.querySelectorAll('.ad-dot');
+  const totalSlides = 3;
+  let slideInterval;
+
+  function updateSlider() {
+    if(!adTrack) return;
+    adTrack.style.transform = `translateX(-${currentAdSlide * 100}%)`;
+    adDots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === currentAdSlide);
+    });
+  }
+
+  function nextSlide() {
+    currentAdSlide = (currentAdSlide + 1) % totalSlides;
+    updateSlider();
+  }
+
+  function goToSlide(index) {
+    currentAdSlide = index;
+    updateSlider();
+    resetInterval();
+  }
+
+  function resetInterval() {
+    clearInterval(slideInterval);
+    slideInterval = setInterval(nextSlide, 5000);
+  }
+
+  if(adTrack) {
+    slideInterval = setInterval(nextSlide, 5000);
+  }
+</script>
 </body>
 </html>

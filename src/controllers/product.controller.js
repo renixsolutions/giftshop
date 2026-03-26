@@ -46,6 +46,45 @@ const generateQRCodePath = (req) => {
   };
 };
 
+// Helper to gracefully apply category filters with slugs and real names
+const applyCategoryFilter = async (query, db, queryCategories, category) => {
+  let filters = [];
+  if (queryCategories && queryCategories.length > 0) {
+    filters = queryCategories;
+  } else if (category && category !== 'all') {
+    filters = [category];
+  }
+  
+  if (filters.length === 0) return;
+
+  try {
+    const dbCats = await db('categories').select('id', 'name', 'slug');
+    let resolved = [];
+    filters.forEach(f => {
+      resolved.push(f);
+      resolved.push(f.replace(/-/g, ' '));
+      const match = dbCats.find(c => c.slug === f || c.name === f);
+      if (match) {
+        resolved.push(match.name);
+      }
+    });
+    resolved = [...new Set(resolved)];
+    
+    query.where(function() {
+      this.whereIn('category', resolved);
+      resolved.forEach(r => this.orWhere('category', 'ilike', r));
+    });
+    return;
+  } catch(e) {
+    const fallback = [...new Set(filters.map(f => f.replace(/-/g, ' ')).concat(filters))];
+    query.where(function() {
+      this.whereIn('category', fallback);
+      fallback.forEach(f => this.orWhere('category', 'ilike', f));
+    });
+    return;
+  }
+};
+
 // Get home page
 const getHomePage = async (req, res) => {
   try {
@@ -169,11 +208,7 @@ const getCollectionsPage = async (req, res) => {
     }
     
     // Handle multiple categories or single category
-    if (queryCategories && queryCategories.length > 0) {
-      query = query.whereIn('category', queryCategories);
-    } else if (category && category !== 'all') {
-      query = query.where({ category });
-    }
+    await applyCategoryFilter(query, db, queryCategories, category);
     
     // Price range filter
     if (minPrice !== null && !isNaN(minPrice)) {
@@ -290,11 +325,7 @@ const getCatalogPage = async (req, res) => {
     }
     
     // Handle multiple categories or single category
-    if (queryCategories && queryCategories.length > 0) {
-      query = query.whereIn('category', queryCategories);
-    } else if (category && category !== 'all') {
-      query = query.where({ category });
-    }
+    await applyCategoryFilter(query, db, queryCategories, category);
     
     // Price range filter
     if (minPrice !== null && !isNaN(minPrice)) {
@@ -469,11 +500,7 @@ const getMoreCollections = async (req, res) => {
     }
     
     // Handle multiple categories or single category
-    if (queryCategories && queryCategories.length > 0) {
-      query = query.whereIn('category', queryCategories);
-    } else if (category && category !== 'all') {
-      query = query.where({ category });
-    }
+    query = await applyCategoryFilter(query, db, queryCategories, category);
     
     // Price range filter
     if (minPrice !== null && !isNaN(minPrice)) {
@@ -537,11 +564,7 @@ const getMoreCatalog = async (req, res) => {
     }
     
     // Handle multiple categories or single category
-    if (queryCategories && queryCategories.length > 0) {
-      query = query.whereIn('category', queryCategories);
-    } else if (category && category !== 'all') {
-      query = query.where({ category });
-    }
+    query = await applyCategoryFilter(query, db, queryCategories, category);
     
     // Price range filter
     if (minPrice !== null && !isNaN(minPrice)) {
@@ -597,9 +620,8 @@ const getAllProducts = async (req, res) => {
       });
     }
     
-    if (category && category !== 'all') {
-      query = query.where({ category });
-    }
+    // Handle multiple categories or single category
+    await applyCategoryFilter(query, db, null, category);
     
     products = await query.orderBy('created_at', 'desc');
     
