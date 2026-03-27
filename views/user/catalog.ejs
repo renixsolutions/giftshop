@@ -24,7 +24,7 @@
     </div>
 
     <!-- Quick category filter -->
-    <div class="text-center mb-4">
+    <div class="occ-tabs mb-4 mx-auto" style="justify-content: center; flex-wrap: wrap;">
         <% 
             // Handle both array and string for selectedCategory
             const isAllSelected = Array.isArray(selectedCategory) ? selectedCategory.length === 0 : selectedCategory === 'all';
@@ -35,27 +35,27 @@
                 return selectedCategory === catName;
             };
         %>
-        <a href="/catalog" class="category-filter-btn <%= isAllSelected ? 'active' : '' %>">All</a>
+        <a href="/catalog" class="occ-pill <%= isAllSelected ? 'occ-pill--primary' : '' %>" style="text-decoration:none;">All</a>
         <% const commonCategories = ['Jeans', 'Shirt', 'Sarees', 'Lehenga', 'Suits']; %>
         <% if (categories && categories.includes('Jeans')) { %>
-            <a href="/catalog?category=Jeans" class="category-filter-btn <%= isCategorySelected('Jeans') ? 'active' : '' %>">Jeans</a>
+            <a href="/catalog?category=Jeans" class="occ-pill <%= isCategorySelected('Jeans') ? 'occ-pill--primary' : '' %>" style="text-decoration:none;">Jeans</a>
         <% } %>
         <% if (categories && categories.includes('Shirt')) { %>
-            <a href="/catalog?category=Shirt" class="category-filter-btn <%= isCategorySelected('Shirt') ? 'active' : '' %>">Shirt</a>
+            <a href="/catalog?category=Shirt" class="occ-pill <%= isCategorySelected('Shirt') ? 'occ-pill--primary' : '' %>" style="text-decoration:none;">Shirt</a>
         <% } %>
         <% if (categories && categories.includes('Sarees')) { %>
-            <a href="/catalog?category=Sarees" class="category-filter-btn <%= isCategorySelected('Sarees') ? 'active' : '' %>">Sarees</a>
+            <a href="/catalog?category=Sarees" class="occ-pill <%= isCategorySelected('Sarees') ? 'occ-pill--primary' : '' %>" style="text-decoration:none;">Sarees</a>
         <% } %>
         <% if (categories && categories.includes('Lehenga')) { %>
-            <a href="/catalog?category=Lehenga" class="category-filter-btn <%= isCategorySelected('Lehenga') ? 'active' : '' %>">Lehenga</a>
+            <a href="/catalog?category=Lehenga" class="occ-pill <%= isCategorySelected('Lehenga') ? 'occ-pill--primary' : '' %>" style="text-decoration:none;">Lehenga</a>
         <% } %>
         <% if (categories && categories.includes('Suits')) { %>
-            <a href="/catalog?category=Suits" class="category-filter-btn <%= isCategorySelected('Suits') ? 'active' : '' %>">Suits</a>
+            <a href="/catalog?category=Suits" class="occ-pill <%= isCategorySelected('Suits') ? 'occ-pill--primary' : '' %>" style="text-decoration:none;">Suits</a>
         <% } %>
         <% if (categories && categories.length > 0) { %>
             <% categories.forEach(cat => { %>
                 <% if (!commonCategories.includes(cat)) { %>
-                    <a href="/catalog?category=<%= cat %>" class="category-filter-btn <%= isCategorySelected(cat) ? 'active' : '' %>">
+                    <a href="/catalog?category=<%= encodeURIComponent(cat) %>" class="occ-pill <%= isCategorySelected(cat) ? 'occ-pill--primary' : '' %>" style="text-decoration:none;">
                         <%= cat %>
                     </a>
                 <% } %>
@@ -100,7 +100,7 @@
     </div>
 </div>
 
-<!-- QR Code Modal -->
+<!-- QR Code Modal
 <div class="modal fade" id="qrCodeModal" tabindex="-1" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
@@ -147,7 +147,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> -->
 
 <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>

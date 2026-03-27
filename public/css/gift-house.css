@@ -49,8 +49,8 @@ body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--ink);li
   opacity:0;
   pointer-events:none;
   transition:all .4s ease;
-  width:260px;
-  background:#fff;
+  width:280px;
+  background:transparent;
 }
 .nav-search-panel.open{
   opacity:1;
@@ -685,6 +685,11 @@ body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--ink);li
   .nav .logo{
     order:1;
     flex:1;
+    font-size: 18px;
+    min-width: 0;
+  }
+  .nav .logo img {
+    height: 40px !important;
   }
   .nav-r{
     order:2;
