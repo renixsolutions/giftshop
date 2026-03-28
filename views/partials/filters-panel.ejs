@@ -2,7 +2,7 @@
 <div class="filters-panel" id="filtersPanel">
     <div class="filters-header">
         <h5 class="mb-0"><i class="bi bi-funnel"></i> Filters</h5>
-        <button class="btn-close-filters d-md-none" id="closeFiltersBtn">
+        <button class="btn-close-filters" id="closeFiltersBtn">
             <i class="bi bi-x-lg"></i>
         </button>
     </div>
@@ -98,7 +98,7 @@
 </div>
 
 <!-- Filter Toggle Button (Mobile) -->
-<button class="btn-filter-toggle d-md-none" id="toggleFiltersBtn">
+<button class="btn-filter-toggle" id="toggleFiltersBtn">
     <i class="bi bi-funnel"></i> Filters
 </button>
 
@@ -433,7 +433,7 @@
     }
     
     /* Mobile Styles */
-    @media (max-width: 767.98px) {
+    @media (max-width: 860px) {
         /* Break out of container on mobile */
         .col-md-3 {
             position: static !important;
@@ -684,7 +684,7 @@
     }
     
     /* Desktop: Keep filters visible */
-    @media (min-width: 768px) {
+    @media (min-width: 861px) {
         .filters-panel {
             position: sticky;
             top: 100px;
