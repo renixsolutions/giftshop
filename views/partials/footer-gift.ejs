@@ -1,7 +1,10 @@
 <div class="footer">
   <div class="footer-top">
     <div>
-      <div class="f-brand">Gift<em>House</em></div>
+      <div class="f-brand" style="display: flex; align-items: center; gap: 8px;">
+        <img src="/images/logofooter.png" alt="Curated By Aissh Logo" style="height: 80px; width: auto; object-fit: contain;">
+        <span>CURATEDBY<em>AISSH</em></span>
+      </div>
       <div class="f-desc">Premium curated gift boxes and bespoke hampers, crafted with love and delivered across India. Making every occasion unforgettable.</div>
     </div>
     <div>
@@ -30,7 +33,15 @@
     </div>
   </div>
   <div class="f-bottom">
-    <span>© <%= new Date().getFullYear() %> GiftHouse. All rights reserved.</span>
+    <span>© <%= new Date().getFullYear() %> CURATEDBYAISSH. All rights reserved.Powered by <a href="https://renix.live">RenixSolutions</a> </span>
     <span>Made with love in India 🇮🇳</span>
   </div>
 </div>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    if (typeof AOS !== 'undefined') {
+      AOS.init({ once: true, offset: 50, duration: 800, easing: 'ease-out-cubic' });
+    }
+  });
+</script>
