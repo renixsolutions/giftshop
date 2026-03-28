@@ -1,6 +1,20 @@
 <%- include('../partials/header-gift') %>
 <%- include('../partials/navbar-gift', { currentPage: 'corporate', cartCount: typeof cartCount !== 'undefined' ? cartCount : 0, userId: typeof userId !== 'undefined' ? userId : null }) %>
 
+<style>
+  .corp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 600px) {
+    .corp-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
 <div class="section" style="max-width:720px;margin:0 auto;">
   <div class="sec-head">
     <div class="sec-tag">Bulk & Corporate</div>
@@ -9,7 +23,7 @@
   </div>
   <form action="/corporate" method="post" style="background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:32px;">
     <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+    <div class="corp-grid">
       <div class="fg">
         <label class="fl">Company name</label>
         <input type="text" name="company_name" class="fi" placeholder="Acme Pvt Ltd">
@@ -19,7 +33,7 @@
         <input type="text" name="contact_person" class="fi" placeholder="Your name">
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+    <div class="corp-grid">
       <div class="fg">
         <label class="fl">Email</label>
         <input type="email" name="email" class="fi" placeholder="you@company.com" required>
