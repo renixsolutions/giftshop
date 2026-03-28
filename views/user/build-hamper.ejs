@@ -134,7 +134,7 @@
     <div class="price-rows" id="price-rows"></div>
     <div class="pt"><span>Total</span><span id="hamper-total">₹0</span></div>
     <button type="button" class="btn-block" id="btn-add-to-cart">Add to Cart →</button>
-    <button type="button" class="btn-block btn-block-ghost" style="margin-top:8px;">Save for Later</button>
+    <button type="button" class="btn-block btn-block-ghost" id="btn-save-later" style="margin-top:8px;">Save for Later</button>
   </div>
 </div>
 
@@ -275,6 +275,7 @@
     }).then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.success) {
+          localStorage.removeItem('__savedHamper');
           window.location.href = '/cart';
         } else {
           alert(data.message || 'Could not add to cart.');
@@ -284,6 +285,39 @@
         alert('Something went wrong. Please try again.');
       });
   });
+
+  var btnSaveLater = document.getElementById('btn-save-later');
+  if (btnSaveLater) {
+    btnSaveLater.addEventListener('click', function() {
+      if (!selectedBox && selectedItems.length === 0) {
+        alert('Please add a box or some items before saving.');
+        return;
+      }
+      var noteEl = document.getElementById('hamperGiftNote');
+      var dateEl = document.getElementById('hamperDeliveryDate');
+      var payload = {
+        box: selectedBox,
+        items: selectedItems,
+        note: noteEl ? noteEl.value : '',
+        date: dateEl ? dateEl.value : ''
+      };
+      localStorage.setItem('__savedHamper', JSON.stringify(payload));
+      
+      // Provide visual feedback instead of an alert
+      var originalText = btnSaveLater.textContent;
+      btnSaveLater.textContent = '✓ Saved Successfully';
+      btnSaveLater.style.background = '#e6f4ea';
+      btnSaveLater.style.color = '#137333';
+      btnSaveLater.style.borderColor = '#137333';
+      
+      setTimeout(function() {
+        btnSaveLater.textContent = originalText;
+        btnSaveLater.style.background = '';
+        btnSaveLater.style.color = '';
+        btnSaveLater.style.borderColor = '';
+      }, 2500);
+    });
+  }
 
   // Continue / Back buttons between steps
   var btnContinue = document.getElementById('btn-continue');
@@ -322,6 +356,44 @@
       }
     });
   }
+
+  // Restore saved hamper from localStorage if present
+  try {
+    var savedStr = localStorage.getItem('__savedHamper');
+    if (savedStr) {
+      var saved = JSON.parse(savedStr);
+      if (saved.box) {
+        selectedBox = saved.box;
+        // Find and select the restored box in the UI
+        document.querySelectorAll('.pkg-opt').forEach(function(o) { 
+          if (o.dataset.boxId == selectedBox.id) {
+            o.classList.add('sel');
+          } else {
+            o.classList.remove('sel');
+          }
+        });
+      }
+      if (saved.items && Array.isArray(saved.items)) {
+        selectedItems = saved.items;
+        // Mark restored items in the UI
+        document.querySelectorAll('.icard').forEach(function(c) {
+          if (selectedItems.some(function(i) { return i.id === c.dataset.productId; })) {
+            c.classList.add('on');
+            c.querySelector('.icard-btn').textContent = '✓ Added';
+          }
+        });
+      }
+      if (saved.note) {
+        var noteEl = document.getElementById('hamperGiftNote');
+        if (noteEl) noteEl.value = saved.note;
+      }
+      if (saved.date) {
+        var dateEl = document.getElementById('hamperDeliveryDate');
+        if (dateEl) dateEl.value = saved.date;
+      }
+      renderSidebar();
+    }
+  } catch(e) { console.error('Error restoring hamper', e); }
 
   // initialise first step
   setStep(1);
