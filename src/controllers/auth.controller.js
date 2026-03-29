@@ -109,11 +109,11 @@ const register = async (req, res) => {
 // User Login
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, redirectTo } = req.body;
     
     if (!email || !password) {
       setFlash(req, 'error', 'Email and password are required. Please login again.');
-      return res.redirect('/auth/login');
+      return res.redirect(`/auth/login${redirectTo ? '?redirectTo=' + encodeURIComponent(redirectTo) : ''}`);
     }
     
     // Find user
@@ -127,7 +127,7 @@ const login = async (req, res) => {
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
       setFlash(req, 'error', 'Invalid email or password. Please login again.');
-      return res.redirect('/auth/login');
+      return res.redirect(`/auth/login${redirectTo ? '?redirectTo=' + encodeURIComponent(redirectTo) : ''}`);
     }
 
     // Enforce email verification before login
@@ -147,7 +147,10 @@ const login = async (req, res) => {
     req.session.userName = user.name;
     
     setFlash(req, 'success', 'Login successful!');
-    res.redirect('/');
+    
+    // Safety check for redirect: only allow local paths
+    const finalRedirect = (redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')) ? redirectTo : '/';
+    res.redirect(finalRedirect);
   } catch (error) {
     console.error('Login error:', error);
     setFlash(req, 'error', 'Login failed. Please login again.');
@@ -172,7 +175,10 @@ const showRegister = (req, res) => {
 
 // Show login form
 const showLogin = (req, res) => {
-  res.render('user/login', { title: 'Login' });
+  res.render('user/login', { 
+    title: 'Login',
+    redirectTo: req.query.redirectTo || ''
+  });
 };
 
 // Show verify-email page

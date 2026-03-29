@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', function(){ showToast('<%= (flash.
     <div style="padding:18px 22px 20px;max-height:70vh;overflow:auto;">
       <form id="authLoginForm" action="/auth/login" method="POST">
         <%- include('../partials/csrf-token') %>
+        <input type="hidden" name="redirectTo" class="js-auth-redirect">
         <div style="margin-bottom:14px;font-size:13px;color:var(--muted);">Sign in to manage your orders, save addresses and track your hampers.</div>
 
         <div style="margin-bottom:12px;">
@@ -116,6 +117,7 @@ document.addEventListener('DOMContentLoaded', function(){ showToast('<%= (flash.
     <div style="padding:18px 22px 20px;max-height:70vh;overflow:auto;">
       <form id="authRegisterForm" action="/auth/register" method="POST">
         <%- include('../partials/csrf-token') %>
+        <input type="hidden" name="redirectTo" class="js-auth-redirect">
         <div style="margin-bottom:14px;font-size:13px;color:var(--muted);">Create your account to save favourites, remember details and checkout faster.</div>
 
         <div style="margin-bottom:10px;">
@@ -167,6 +169,13 @@ document.addEventListener('DOMContentLoaded', function(){ showToast('<%= (flash.
       overlay.style.display = 'block';
       if(modalLogin) modalLogin.style.display = mode === 'login' ? 'flex' : 'none';
       if(modalRegister) modalRegister.style.display = mode === 'register' ? 'flex' : 'none';
+      
+      // Dynamic redirect: capture current page context
+      var currentPath = window.location.pathname + window.location.search;
+      document.querySelectorAll('.js-auth-redirect').forEach(function(input) {
+        input.value = currentPath;
+      });
+
       document.body.style.overflow = 'hidden';
     }
     function closeModal(){

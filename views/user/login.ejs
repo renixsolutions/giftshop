@@ -27,6 +27,7 @@
                     
                     <form action="/auth/login" method="POST">
                         <%- include('../partials/csrf-token') %>
+                        <input type="hidden" name="redirectTo" value="<%= typeof redirectTo !== 'undefined' ? redirectTo : '' %>">
                         <div class="mb-4">
                             <label for="email" class="form-label fw-semibold">Email Address</label>
                             <div class="input-group">

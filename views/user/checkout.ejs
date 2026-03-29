@@ -16,12 +16,6 @@
         gap:28px;
         align-items:start;
     }
-    @media(max-width:900px){
-        .co-wrap{
-            grid-template-columns:1fr;
-            padding:0 16px 40px;
-        }
-    }
 
     .co-main .card{
         border-radius:22px !important;
@@ -140,15 +134,20 @@
         box-shadow:0 6px 14px rgba(28,16,8,.16);
     }
 
-    /* Map search input alignment */
-    .co-main #checkoutForm #mapSearch{
-        min-height:44px;
-        border-top-left-radius:999px !important;
-        border-bottom-left-radius:999px !important;
-    }
-    .co-main #checkoutForm #searchBtn{
-        border-top-right-radius:999px !important;
-        border-bottom-right-radius:999px !important;
+    @media(min-width: 769px) {
+        /* Map search input alignment - desktop pill style */
+        .co-main #checkoutForm #mapSearch{
+            min-height:46px;
+            border-radius: 30px 0 0 30px !important;
+            border-right: none !important;
+        }
+        .co-main #checkoutForm #searchBtn{
+            border-radius: 0 30px 30px 0 !important;
+            height: 46px;
+            min-height: 46px;
+            padding: 0 24px;
+            margin: 0 !important;
+        }
     }
     .co-main #checkoutForm .input-group{
         position: relative;
@@ -231,6 +230,94 @@
         border:1px solid var(--border);
         height:fit-content;
     }
+    @media(max-width:768px){
+        .co-wrap{
+            grid-template-columns:1fr;
+            padding:0 16px 40px;
+        }
+        .co-sidebar{
+            order: 10;
+            margin-top: 24px;
+        }
+        .co-grid {
+            grid-template-columns: 1fr !important;
+        }
+        .co-main #checkoutForm{
+            padding: 12px 0 10px;
+        }
+        .co-main .card-body {
+            padding: 1.25rem !important;
+        }
+        .co-title {
+            font-size: 22px;
+        }
+        /* Style map search for mobile */
+        .co-main #checkoutForm .map-search-group {
+            flex-direction: column !important;
+            gap: 12px;
+            background: none !important;
+            border: none !important;
+            display: flex !important;
+        }
+        .co-main #checkoutForm #mapSearch {
+            border-radius: 12px !important;
+            border: 1.5px solid var(--border2) !important;
+            width: 100% !important;
+            min-height: 48px;
+            /* Explicitly reset ALL corners for older browsers */
+            border-top-left-radius: 12px !important;
+            border-bottom-left-radius: 12px !important;
+            border-top-right-radius: 12px !important;
+            border-bottom-right-radius: 12px !important;
+        }
+        .co-main #checkoutForm #searchBtn {
+            border-radius: 12px !important;
+            width: 100% !important;
+            justify-content: center;
+            height: 48px;
+            margin: 0 !important;
+            /* Explicitly reset ALL corners for older browsers */
+            border-top-left-radius: 12px !important;
+            border-bottom-left-radius: 12px !important;
+            border-top-right-radius: 12px !important;
+            border-bottom-right-radius: 12px !important;
+        }
+        /* Payment Card stack premium redesign */
+        .payment-premium-card {
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+            gap: 24px !important;
+            padding: 32px 24px !important;
+            background: linear-gradient(145deg, var(--goldbg) 0%, #fff 100%) !important;
+            border: 1.5px solid var(--gold) !important;
+            box-shadow: 0 12px 30px rgba(196,98,45,0.1);
+        }
+        .payment-premium-card > div[style*="text-align: right"] {
+            border-top: 1px dashed rgba(196,98,45,0.3) !important;
+            padding-top: 24px !important;
+            width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+        }
+        .payment-premium-card img {
+            height: 22px !important;
+            margin-bottom: 8px;
+        }
+        .payment-premium-card .bi {
+            font-size: 24px !important;
+            opacity: 0.9 !important;
+        }
+        .d-flex.gap-3.mt-3 {
+            flex-direction: column !important;
+            gap: 12px !important;
+        }
+        .leaflet-popup-content-wrapper {
+            max-width: 240px !important;
+        }
+    }
 </style>
 
 <div class="co-wrap" style="margin-top:24px;margin-bottom:56px;">
@@ -274,7 +361,7 @@
                                 <label class="form-label mb-1">
                                     <i class="bi bi-map"></i> Search & select on map <span class="text-danger">*</span>
                                 </label>
-                                <div class="input-group">
+                                <div class="input-group map-search-group">
                                     <input type="text" 
                                            class="form-control" 
                                            id="mapSearch" 
@@ -600,11 +687,11 @@
     });
     
     function initMap() {
-        // Default location (Neemuch, Madhya Pradesh, India)
-        const defaultLocation = [24.4539, 74.8683];
+        // Fallback center (India) if geolocation fails
+        const defaultLocation = [20.5937, 78.9629];
         
-        // Initialize map
-        map = L.map('map').setView(defaultLocation, 13);
+        // Initialize map with a zoomed-out view if using fallback
+        map = L.map('map', { attributionControl: false }).setView(defaultLocation, 5);
         
         // Add OpenStreetMap tiles (free)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
