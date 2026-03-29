@@ -1,46 +1,58 @@
-<div class="top-ganesha" style="text-align: center; padding: 5px 0; background-color: #fff; border-bottom: 1px solid rgba(0,0,0,0.05);">
-  <img src="/images/ganeshji.png" alt="Ganeshji" style="height: 36px; width: auto; object-fit: contain;" title="Shree Ganesh">
+<div class="top-ganesha"
+  style="text-align: center; padding: 5px 0; background-color: #fff; border-bottom: 1px solid rgba(0,0,0,0.05);">
+  <img src="/images/ganeshji.png" alt="Ganeshji" style="height: 36px; width: auto; object-fit: contain;"
+    title="Shree Ganesh">
 </div>
 <nav class="nav">
   <a href="/" class="logo" style="display: flex; align-items: center; gap: 8px;">
-    <img src="/images/curatedbyaisshlogoo.png" alt="Curated By Aissh Logo" style="height: 60px; width: auto; object-fit: contain;">
+    <img src="/images/curatedbyaisshlogoo.png" alt="Curated By Aissh Logo"
+      style="height: 60px; width: auto; object-fit: contain;">
     <span>CURATEDBY<em>AISSH</em></span>
   </a>
   <button class="nav-burger" id="navBurger" aria-label="Toggle menu">☰</button>
   <ul class="nav-links">
-    <li><a href="/" class="<%= typeof currentPage !== 'undefined' && currentPage === 'home' ? 'hi' : '' %>">Home</a></li>
-    <li><a href="/collections" class="<%= typeof currentPage !== 'undefined' && currentPage === 'catalog' ? 'hi' : '' %>">Shop</a></li>
-    <li><a href="/build-hamper" class="<%= typeof currentPage !== 'undefined' && currentPage === 'build' ? 'hi' : '' %>">Build a Hamper</a></li>
-    <li><a href="/occasions" class="<%= typeof currentPage !== 'undefined' && currentPage === 'occasions' ? 'hi' : '' %>">Occasions</a></li>
-    <li><a href="/corporate" class="<%= typeof currentPage !== 'undefined' && currentPage === 'corporate' ? 'hi' : '' %>">Corporate</a></li>
+    <li><a href="/" class="<%= typeof currentPage !== 'undefined' && currentPage === 'home' ? 'hi' : '' %>">Home</a>
+    </li>
+    <li><a href="/collections"
+        class="<%= typeof currentPage !== 'undefined' && currentPage === 'catalog' ? 'hi' : '' %>">Shop</a></li>
+    <li><a href="/build-hamper"
+        class="<%= typeof currentPage !== 'undefined' && currentPage === 'build' ? 'hi' : '' %>">Build a Hamper</a></li>
+    <li><a href="/occasions"
+        class="<%= typeof currentPage !== 'undefined' && currentPage === 'occasions' ? 'hi' : '' %>">Occasions</a></li>
+    <li><a href="/corporate"
+        class="<%= typeof currentPage !== 'undefined' && currentPage === 'corporate' ? 'hi' : '' %>">Corporate</a></li>
 
     <!-- Mobile-only actions (cart, orders, auth) -->
     <li class="nav-mobile-actions">
       <a href="/cart" class="nav-link-row">
         <span>Cart</span>
-        <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
-          <span class="nav-pill"><%= cartCount %></span>
-        <% } %>
+        <% if (typeof cartCount !=='undefined' && cartCount> 0) { %>
+          <span class="nav-pill">
+            <%= cartCount %>
+          </span>
+          <% } %>
       </a>
     </li>
-    <% if (typeof userId !== 'undefined' && userId) { %>
+    <% if (typeof userId !=='undefined' && userId) { %>
       <li class="nav-mobile-actions">
         <a href="/orders" class="nav-link-row">
           <span>My Orders</span>
         </a>
       </li>
       <li class="nav-mobile-actions">
-        <button type="button" class="nav-link-row" style="border:none;background:none;width:100%;text-align:left;padding:0;" onclick="document.getElementById('navLogoutForm')?.submit();">
+        <button type="button" class="nav-link-row"
+          style="border:none;background:none;width:100%;text-align:left;padding:0;"
+          onclick="document.getElementById('navLogoutForm')?.submit();">
           <span>Sign Out</span>
         </button>
       </li>
-    <% } else { %>
-      <li class="nav-mobile-actions">
-        <a href="/auth/login" class="nav-link-row js-open-auth-login">
-          <span>Sign In</span>
-        </a>
-      </li>
-    <% } %>
+      <% } else { %>
+        <li class="nav-mobile-actions">
+          <a href="/auth/login" class="nav-link-row js-open-auth-login">
+            <span>Sign In</span>
+          </a>
+        </li>
+        <% } %>
   </ul>
   <div class="nav-r">
     <div class="nav-search" id="navSearch">
@@ -48,29 +60,34 @@
         🔍
       </button>
       <div class="nav-search-panel" id="navSearchPanel">
-        <input type="text" id="navSearchInput" class="nav-search-input" placeholder="Search for gifts, sarees, hampers..." autocomplete="off">
+        <input type="text" id="navSearchInput" class="nav-search-input"
+          placeholder="Search for gifts, sarees, hampers..." autocomplete="off">
         <div class="nav-search-results" id="navSearchResults"></div>
       </div>
     </div>
     <a href="/cart" class="nav-btn" title="Cart" style="position:relative;">
       🛒
-      <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
-      <span class="nav-pill"><%= cartCount %></span>
-      <% } %>
+      <% if (typeof cartCount !=='undefined' && cartCount> 0) { %>
+        <span class="nav-pill">
+          <%= cartCount %>
+        </span>
+        <% } %>
     </a>
-    <% if (typeof userId !== 'undefined' && userId) { %>
-    <a href="/orders" class="nav-btn" title="Orders">📋</a>
-    <a href="/auth/logout" class="nav-cta" onclick="event.preventDefault(); document.getElementById('navLogoutForm')?.submit();">Sign Out</a>
-    <% } else { %>
-    <a href="/auth/login" class="nav-cta">Sign In</a>
-    <% } %>
+    <% if (typeof userId !=='undefined' && userId) { %>
+      <a href="/orders" class="nav-btn" title="Orders">📋</a>
+      <a href="/auth/logout" class="nav-cta"
+        onclick="event.preventDefault(); document.getElementById('navLogoutForm')?.submit();">Sign Out</a>
+      <% } else { %>
+        <a href="/auth/login" class="nav-cta">Sign In</a>
+        <% } %>
   </div>
+  <div class="nav-overlay" id="navOverlay"></div>
 </nav>
 
 <!-- WhatsApp float - quick queries (Indian gift shops) -->
-<a href="https://wa.me/919876543210?text=Hi%2C%20I%20have%20a%20query%20about%20gift%20hampers" target="_blank" rel="noopener" class="whatsapp-float" title="Chat on WhatsApp"><i class="bi bi-whatsapp"></i></a>
+<a href="https://wa.me/919876543210?text=Hi%2C%20I%20have%20a%20query%20about%20gift%20hampers" target="_blank"
+  rel="noopener" class="whatsapp-float" title="Chat on WhatsApp"><i class="bi bi-whatsapp"></i></a>
 
-<!-- Hidden logout form for mobile sign-out (POST with CSRF) -->
 <form id="navLogoutForm" action="/auth/logout" method="POST" style="display:none;">
   <%- include('../partials/csrf-token') %>
 </form>
@@ -109,7 +126,7 @@
       searchToggle.addEventListener('click', function () {
         searchPanel.classList.toggle('open');
         if (searchPanel.classList.contains('open')) {
-          setTimeout(function(){ searchInput.focus(); }, 20);
+          setTimeout(function () { searchInput.focus(); }, 20);
         } else {
           searchResults.innerHTML = '';
         }
@@ -169,8 +186,16 @@
         }, 250);
       });
 
+      // Mobile menu close on clicking overlay
+      var navOverlay = document.getElementById('navOverlay');
+      if (navOverlay) {
+        navOverlay.addEventListener('click', function () {
+          nav.classList.remove('nav-open');
+        });
+      }
+
       document.addEventListener('click', function (e) {
-        if (!searchPanel.contains(e.target) && e.target !== searchToggle) {
+        if (!searchPanel.contains(e.target) && !searchToggle.contains(e.target)) {
           closeSearch();
         }
       });
