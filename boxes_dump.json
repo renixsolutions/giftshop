@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "name": "Pinewood Tray",
+    "base_price": "499.00",
+    "description": "Classic wooden tray",
+    "image": null,
+    "icon": "📦",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2026-03-17T05:28:38.225Z",
+    "updated_at": "2026-03-17T05:28:38.225Z"
+  },
+  {
+    "id": 2,
+    "name": "Kappa Board Box",
+    "base_price": "349.00",
+    "description": "Lightweight sturdy box",
+    "image": null,
+    "icon": "📦",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2026-03-17T05:28:38.225Z",
+    "updated_at": "2026-03-17T05:28:38.225Z"
+  },
+  {
+    "id": 3,
+    "name": "Suede Box",
+    "base_price": "599.00",
+    "description": "Premium suede finish",
+    "image": null,
+    "icon": "🎁",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2026-03-17T05:28:38.225Z",
+    "updated_at": "2026-03-17T05:28:38.225Z"
+  },
+  {
+    "id": 4,
+    "name": "Acrylic Box",
+    "base_price": "699.00",
+    "description": "Clear acrylic display",
+    "image": null,
+    "icon": "✨",
+    "sort_order": 4,
+    "is_active": true,
+    "created_at": "2026-03-17T05:28:38.225Z",
+    "updated_at": "2026-03-17T05:28:38.225Z"
+  }
+]

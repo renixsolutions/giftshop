@@ -56,6 +56,7 @@
             </li>
             <li class="nav-item">
                 <form action="/admin/logout" method="POST" class="d-inline w-100">
+                    <%- include('csrf-token') %>
                     <button type="submit" class="nav-link logout-btn">
                         <i class="bi bi-box-arrow-right"></i>
                         <span>Logout</span>

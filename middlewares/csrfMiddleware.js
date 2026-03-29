@@ -33,7 +33,7 @@ const csrfMiddleware = (req, res, next) => {
   if (!token || token !== expectedToken) {
     const { setFlash } = require('../libs/helpers');
     setFlash(req, 'error', 'Invalid security token. Please try again.');
-    return res.status(403).redirect('back');
+    return res.status(403).redirect(req.get('Referrer') || '/');
   }
   
   next();
@@ -47,7 +47,7 @@ const csrfValidationAfterMulter = (req, res, next) => {
   if (!token || token !== expectedToken) {
     const { setFlash } = require('../libs/helpers');
     setFlash(req, 'error', 'Invalid security token. Please try again.');
-    return res.status(403).redirect('back');
+    return res.status(403).redirect(req.get('Referrer') || '/');
   }
   
   next();

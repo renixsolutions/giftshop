@@ -50,6 +50,7 @@ router.post('/products/:id/delete', requireAdmin, productController.adminDeleteP
 
 // Order routes
 router.get('/orders', requireAdmin, orderController.adminListOrders);
+router.get('/orders/:id', requireAdmin, orderController.adminGetOrderDetails);
 router.post('/orders/:id/status', requireAdmin, orderController.adminUpdateOrderStatus);
 
 // Corporate leads (GiftHouse)
