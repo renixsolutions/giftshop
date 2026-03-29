@@ -58,6 +58,7 @@ app.use(async (req, res, next) => {
   }
   
   res.locals.currentPath = req.path;
+  res.locals.appUrl = process.env.APP_URL || (req.protocol + '://' + req.get('host'));
   
   next();
 });

@@ -8,15 +8,43 @@
     <meta name="description" content="<%= typeof metaDescription !== 'undefined' ? metaDescription : 'Discover premium curated gifts, luxury hampers and personalized gift boxes online at Shubham Garments. Perfect for all occasions.' %>">
     <meta name="keywords" content="curatedbyaissh, gift shop india, luxury hampers, personalized gifts, corporate gifts, wedding hampers">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://curatedbyaissh.com<%= typeof currentPath !== 'undefined' ? currentPath : '' %>">
+    <link rel="canonical" href="<%= appUrl %><%= typeof currentPath !== 'undefined' ? currentPath : '' %>">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://curatedbyaissh.com<%= typeof currentPath !== 'undefined' ? currentPath : '' %>">
-    <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Shubham Garments | Premium Gifts & Hampers' %>">
+    <meta property="og:url" content="<%= appUrl %><%= typeof currentPath !== 'undefined' ? currentPath : '' %>">
+    <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Curated By Aissh | Premium Gifts & Hampers' %>">
     <meta property="og:description" content="Discover premium curated gifts and bespoke hampers for every occasion. Delivered across India.">
-    <meta property="og:image" content="https://curatedbyaissh.com/images/logofooter.png">
-    <meta property="og:site_name" content="Shubham Garments">
+    <meta property="og:image" content="<%= appUrl %>/images/logofooter.png">
+    <meta property="og:site_name" content="Curated By Aissh">
+
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Curated By Aissh",
+      "url": "<%= appUrl %>",
+      "logo": "<%= appUrl %>/images/logofooter.png",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+91-9940192593",
+        "contactType": "customer service"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "url": "<%= appUrl %>",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "<%= appUrl %>/catalog?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
 
     <link rel="icon" type="image/png" href="/images/ganeshji.png">
     <%- include('loader') %>
