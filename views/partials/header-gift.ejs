@@ -228,6 +228,57 @@ document.addEventListener('DOMContentLoaded', function(){ showToast('<%= (flash.
     window.__giftAuthOpen = openModal;
   })();
 </script>
+
+<!-- Global Brand Loader (Bottom Floating) -->
+<div id="globalLoader" style="position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:14px 28px;border-radius:999px;box-shadow:0 12px 40px rgba(0,0,0,0.3);z-index:99999;display:flex;align-items:center;gap:14px;opacity:0;pointer-events:none;transition:all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(8px);">
+  <div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:var(--accent);border-radius:50%;animation:loader-bounce 1s infinite alternate;">
+    <i class="bi bi-heart-fill" style="font-size:10px;color:#fff;"></i>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:1px;">
+    <span style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700;letter-spacing:0.5px;line-height:1;">Curating Gifts...</span>
+    <span style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;font-weight:600;">Curated By Aissh</span>
+  </div>
+</div>
+
+<style>
+@keyframes loader-bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-4px); }
+}
+.loader-active {
+  opacity: 1 !important;
+  transform: translateX(-50%) translateY(0) !important;
+  pointer-events: auto !important;
+}
+</style>
+
+<script>
+(function() {
+  var globalLoader = document.getElementById('globalLoader');
+  
+  window.showLoader = function() {
+    if(globalLoader) globalLoader.classList.add('loader-active');
+  };
+  
+  window.hideLoader = function() {
+    if(globalLoader) globalLoader.classList.remove('loader-active');
+  };
+
+  // Show loader on page transitions for a premium feel
+  window.addEventListener('beforeunload', function() {
+    window.showLoader();
+  });
+
+  // Small delay to ensure any existing loader is cleared on fresh load
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(window.hideLoader, 400);
+  });
+  
+  // Also hook into AJAX if needed (for more complex apps)
+  // For now, let's keep it simple as per user request
+})();
+</script>
+
 <% if (typeof flash !== 'undefined' && flash && flash.message && flash.message.includes('login')) { %>
 <script>
   document.addEventListener('DOMContentLoaded', function(){
