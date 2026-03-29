@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /auth/
 Disallow: /api/
-Sitemap: https://giftshop.renixsolutions.com/sitemap.xml
+Sitemap: https://curatedbyaissh.renix.live/sitemap.xml
