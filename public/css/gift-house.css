@@ -50,6 +50,7 @@ a:hover{text-decoration:none !important;}
 .nav-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;position:relative;transition:all .2s;text-decoration:none;color:inherit;}
 .nav-btn:hover{background:var(--warm);border-color:var(--border2);}
 .nav-search{display:flex;align-items:center;position:relative;}
+.nav-search-header-m{display:none;}
 .nav-search-panel{
   position:absolute;
   right:100%;
@@ -504,7 +505,7 @@ a:hover{text-decoration:none !important;}
 .sp{display:flex;align-items:center;gap:10px;padding:10px 22px;border-radius:30px;font-size:13.5px;font-weight:500;color:var(--muted);cursor:default;}
 .sp.done{color:var(--green);}
 .sp.active{background:var(--ink);color:#fff;}
-.sp-c{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:rgba(0,0,0,.08);}
+.sp-c{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:rgba(0,0,0,.08);flex-shrink:0;}
 .sp.active .sp-c{background:var(--gold);color:var(--ink);}
 .sp.done .sp-c{background:var(--green);color:#fff;}
 .sp-line{flex:1;max-width:60px;height:1.5px;background:var(--border);}
@@ -729,40 +730,89 @@ a:hover{text-decoration:none !important;}
   .nav-links{order:4;}
 
   /* Show search in header, hide desktop cart/orders/sign buttons */
-  /* Mobile search dropdown - full width below header */
+  /* Mobile search dropdown - full width below header or full screen? Let's do full screen OVERLAY for premium feel */
   .nav-search-panel {
     position: fixed;
-    top: 72px;
+    top: 0;
     left: 0;
-    width: 100%;
+    width: 100vw;
+    height: 100vh;
     max-width: none;
     background: #fff;
-    padding: 12px 16px;
-    border-bottom: 1.5px solid var(--border);
-    transform: translateY(-10px);
+    padding: 16px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(30px);
     opacity: 0;
     pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-    z-index: 150;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     margin-right: 0;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    border-bottom: none;
+    box-shadow: none;
   }
   .nav-search-panel.open {
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
   }
+  .nav-search-header-m {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-top: 8px;
+  }
+  .nav-search-back-m {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--warm);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .nav-search-title-m {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .nav-search-input-wrap {
+    position: relative;
+    width: 100%;
+  }
   .nav-search-input {
     background: var(--warm);
-    padding: 10px 16px;
+    padding: 14px 20px 14px 48px;
+    border-radius: 16px;
+    border: 1.5px solid var(--border);
+    font-size: 15px;
+    margin-bottom: 0;
+  }
+  .nav-search-icon-m {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: var(--muted);
+    pointer-events: none;
   }
   .nav-search-results {
     position: static;
-    margin-top: 8px;
+    margin-top: 20px;
     border: none;
     box-shadow: none;
-    max-height: 60vh;
+    flex: 1;
+    max-height: none;
+    overflow-y: auto;
     border-top: 1px solid var(--border);
+    padding-top: 10px;
   }
   .nav-r a[title="Cart"],
   .nav-r a[title="Orders"],
