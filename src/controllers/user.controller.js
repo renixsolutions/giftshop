@@ -130,9 +130,11 @@ module.exports = {
   // Dynamic Sitemap generator
   generateSitemap: async (req, res) => {
     try {
-      // Use PRODUCTION_URL if available, otherwise fallback to current host
-      const baseUrl = process.env.PRODUCTION_URL || `https://${req.get('host')}`;
+      // Use APP_URL from .env as the source of truth, fallback to host header
+      const baseUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
       const products = await db('products').select('id', 'updated_at');
+      const categoryRows = await db('products').distinct('category').whereNotNull('category');
+      const occasionRows = await db('occasions').where({ is_active: true }).select('slug');
 
       let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -141,6 +143,24 @@ module.exports = {
   <url><loc>${baseUrl}/collections</loc><priority>0.8</priority></url>
   <url><loc>${baseUrl}/occasions</loc><priority>0.8</priority></url>
   <url><loc>${baseUrl}/build-hamper</loc><priority>0.9</priority></url>`;
+
+      // Add Category filtered pages
+      categoryRows.forEach(c => {
+        xml += `
+  <url>
+    <loc>${baseUrl}/catalog?category=${encodeURIComponent(c.category)}</loc>
+    <priority>0.8</priority>
+  </url>`;
+      });
+
+      // Add Occasion filtered pages
+      occasionRows.forEach(o => {
+        xml += `
+  <url>
+    <loc>${baseUrl}/occasions?occ=${encodeURIComponent(o.slug)}</loc>
+    <priority>0.8</priority>
+  </url>`;
+      });
 
       // Add product detail pages
       products.forEach(p => {
