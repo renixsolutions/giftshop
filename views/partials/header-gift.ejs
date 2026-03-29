@@ -3,12 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= typeof title !== 'undefined' ? title : 'GiftHouse — Curated Gift Boxes & Hampers' %></title>
+  <title><%= typeof title !== 'undefined' ? title : 'Curated By Aissh | Premium Gifts, Hampers & Gift Boxes Online in India' %></title>
+  <meta name="description" content="<%= typeof metaDescription !== 'undefined' ? metaDescription : 'Discover luxury curated gift boxes and personalized hampers at Curated By Aissh. Perfect for birthdays, anniversaries, corporate events, and weddings. Handcrafted with love and delivered across India.' %>">
+  <meta name="keywords" content="curatedbyaissh, curated by aissh, gift shop online india, curated gift boxes india, luxury hampers, personalized gifts, corporate gifting, birthday hampers, wedding gifts india, customized gift sets, unique gift boxes, premium gift packaging, curated luxury gifts">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://curatedbyaissh.com/">
+  <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Curated By Aissh | Premium Gifts & Hampers' %>">
+  <meta property="og:description" content="Premium curated gift boxes and bespoke hampers, crafted with love and delivered across India. Making every occasion unforgettable.">
+  <meta property="og:image" content="https://curatedbyaissh.com/images/logofooter.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://curatedbyaissh.com/">
+  <meta property="twitter:title" content="Curated By Aissh | Premium Gifts & Hampers">
+  <meta property="twitter:description" content="Discover luxury curated gift boxes and personalized hampers. Delivered across India.">
+  <meta property="twitter:image" content="https://curatedbyaissh.com/images/logofooter.png">
   <% if (typeof csrfToken !== 'undefined') { %>
   <meta name="csrf-token" content="<%= csrfToken %>">
   <% } %>
   <link rel="stylesheet" href="/css/gift-house.css">
+  <link rel="icon" type="image/png" href="/images/ganeshji.png">
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </head>
 <body>
 

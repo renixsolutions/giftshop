@@ -326,24 +326,43 @@
                         <div class="co-section">
                             <div class="co-sec-hd">Delivery preferences</div>
                             <div class="co-grid full">
-                                <div class="fg">
-                                    <label for="delivery_date" class="form-label">Preferred Delivery Date</label>
-                                    <input type="date" class="form-control" id="delivery_date" name="delivery_date" min="<%= new Date().toISOString().split('T')[0] %>">
-                                </div>
-                                <div class="fg">
+                                <div class="fg" style="grid-column: 1 / -1;">
                                     <label for="gift_note" class="form-label">Gift Message (optional)</label>
                                     <textarea class="form-control" id="gift_note" name="gift_note" rows="3" placeholder="We'll print this on a card inside the gift..."></textarea>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Payment options -->
                         <div class="co-section">
-                            <div class="co-sec-hd">Payment method</div>
-                            <label class="pay-opt">
-                                <input class="form-check-input" type="radio" name="payment_mode" id="pay_full" value="full_online" checked style="margin-right:10px;">
-                                <div class="pay-lbl">Pay full amount online (UPI / Card / Net banking)</div>
-                            </label>
+                            <div class="co-sec-hd" style="font-family:'Playfair Display',serif; font-size:22px; font-weight:900; color:var(--ink); margin-bottom:18px;">Payment Method</div>
+                            
+                            <div class="payment-premium-card" style="background: var(--goldbg); border: 2px solid var(--gold); border-radius: 20px; padding: 28px; position: relative; overflow: hidden; display: flex; align-items: center; gap: 24px;">
+                                <!-- Center Text Part -->
+                                <div style="flex: 1;">
+                                    <h6 style="font-family:'Playfair Display',serif; font-size: 19px; font-weight: 800; color: var(--ink); margin-bottom: 4px;">Secure Online Checkout</h6>
+                                    <p style="margin: 0; font-size: 13.5px; color: var(--muted); font-weight: 500; letter-spacing: 0.2px;">
+                                        Powered by Razorpay &bull; UPI, Cards, Netbanking
+                                    </p>
+                                </div>
+                                
+                                <!-- Right Brand Part -->
+                                <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                                    <div style="font-size: 10px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.8; margin-bottom: 2px;">Secured by</div>
+                                    <img src="https://razorpay.com/assets/razorpay-logo.svg" style="height: 18px; filter: contrast(1.1) brightness(0.9);">
+                                    <div class="d-flex gap-2 mt-2">
+                                        <i class="bi bi-credit-card" style="color: var(--gold); font-size: 18px; opacity: 0.7;"></i>
+                                        <i class="bi bi-phone" style="color: var(--gold); font-size: 18px; opacity: 0.7;"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Subtle background pattern -->
+                                <div style="position: absolute; right: -15px; top: -15px; width: 60px; height: 60px; background: var(--gold); opacity: 0.05; border-radius: 50%;"></div>
+                            </div>
+                            
+                            <input type="hidden" name="payment_mode" value="full_online">
+                            <p class="mt-3 text-center" style="font-size: 12px; color: var(--faint);">
+                                <i class="bi bi-lock-fill me-1"></i> Your payment details are encrypted and processed securely.
+                            </p>
                         </div>
                         
                         <div class="d-flex gap-3 mt-3">
@@ -440,7 +459,7 @@
         // Form submission validation
         const form = document.getElementById('checkoutForm');
         if (form) {
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', async function(e) {
                 const phone = phoneInput.value.replace(/\D/g, '');
                 if (phone.length !== 10) {
                     e.preventDefault();
@@ -458,10 +477,110 @@
                     pincodeInput.focus();
                     return false;
                 }
+
+                // Check payment mode
+                const paymentModeElement = document.querySelector('input[name="payment_mode"]');
+                const paymentMode = paymentModeElement ? paymentModeElement.value : 'full_online';
+                if (paymentMode === 'full_online' || paymentMode === 'partial_cod') {
+                    e.preventDefault();
+                    
+                    // Show loading state
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    const originalBtnContent = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                    
+                    try {
+                        const formData = new FormData(form);
+                        const data = {};
+                        formData.forEach((value, key) => data[key] = value);
+                        
+                        const csrfToken = document.querySelector('input[name="_csrf"]').value;
+                        const response = await fetch('/orders/checkout', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-Token': csrfToken
+                            },
+                            body: JSON.stringify(data)
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success && result.status === 'online_payment') {
+                            // Trigger Razorpay
+                            const options = {
+                                key: "<%= razorpayKeyId %>",
+                                amount: result.razorpay_order.amount,
+                                currency: result.razorpay_order.currency,
+                                name: "GiftHouse",
+                                description: "Checkout Payment",
+                                order_id: result.razorpay_order.id,
+                                handler: function(response) {
+                                    // Verify payment on server
+                                    const csrfToken = document.querySelector('input[name="_csrf"]').value;
+                                    fetch('/orders/verify-payment', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Accept': 'application/json',
+                                            'X-CSRF-Token': csrfToken
+                                        },
+                                        body: JSON.stringify({
+                                            razorpay_order_id: response.razorpay_order_id,
+                                            razorpay_payment_id: response.razorpay_payment_id,
+                                            razorpay_signature: response.razorpay_signature,
+                                            order_id: result.order_id
+                                        })
+                                    })
+                                    .then(verifyRes => verifyRes.json())
+                                    .then(verifyResult => {
+                                        if (verifyResult.success) {
+                                            window.location.href = verifyResult.redirect_url;
+                                        } else {
+                                            alert('Payment verification failed. Please contact us.');
+                                            submitBtn.innerHTML = originalBtnContent;
+                                            submitBtn.disabled = false;
+                                        }
+                                    });
+                                },
+                                prefill: {
+                                    name: result.user.name,
+                                    email: result.user.email,
+                                    contact: result.user.phone
+                                },
+                                theme: {
+                                    color: "#1c1008"
+                                },
+                                modal: {
+                                    ondismiss: function() {
+                                        submitBtn.innerHTML = originalBtnContent;
+                                        submitBtn.disabled = false;
+                                    }
+                                }
+                            };
+                            
+                            const rzp = new Razorpay(options);
+                            rzp.open();
+                        } else if (!result.success) {
+                             alert(result.message || 'Error occurred while creating order.');
+                             submitBtn.innerHTML = originalBtnContent;
+                             submitBtn.disabled = false;
+                        }
+                    } catch (error) {
+                        console.error('Checkout error:', error);
+                        alert('Something went wrong. Please try again.');
+                        submitBtn.innerHTML = originalBtnContent;
+                        submitBtn.disabled = false;
+                    }
+                }
             });
         }
     }
 </script>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <!-- Leaflet CSS (Free OpenStreetMap) -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />

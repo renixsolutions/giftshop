@@ -1,4 +1,7 @@
-<%- include('../partials/header-gift') %>
+<%- include('../partials/header-gift', { 
+    title: product.title + ' | Curated By Aissh',
+    metaDescription: (product.description || '').substring(0, 160) + '...'
+}) %>
 <%- include('../partials/navbar-gift', { 
   currentPage: 'catalog',
   cartCount: typeof cartCount !== 'undefined' ? cartCount : 0,

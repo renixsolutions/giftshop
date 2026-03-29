@@ -722,10 +722,14 @@
         
         // Toggle filters on mobile
         if (toggleFiltersBtn) {
-            toggleFiltersBtn.addEventListener('click', function() {
+            toggleFiltersBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 filtersPanel.classList.add('active');
                 overlay.classList.add('active');
                 document.body.classList.add('filters-open');
+                // Ensure the panel is visible and above everything
+                filtersPanel.style.display = 'flex';
             });
         }
         
@@ -734,6 +738,14 @@
             filtersPanel.classList.remove('active');
             overlay.classList.remove('active');
             document.body.classList.remove('filters-open');
+            // Give time for transition before hiding if needed
+            setTimeout(() => {
+                if (!filtersPanel.classList.contains('active')) {
+                    if (window.innerWidth <= 860) {
+                        // Keep it hidden on mobile when not active
+                    }
+                }
+            }, 300);
         }
         
         if (closeFiltersBtn) {

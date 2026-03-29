@@ -1,4 +1,7 @@
-<%- include('../partials/header-gift') %>
+<%- include('../partials/header-gift', { 
+    title: 'Shop Premium Gift Boxes & Hampers Online | Curated By Aissh',
+    metaDescription: 'Browse our exclusive collection of curated gift boxes and hampers. From birthday boxes to corporate gifts, find the perfect handcrafted gift at Curated By Aissh.'
+}) %>
 <%- include('../partials/navbar-gift', { 
   currentPage: 'catalog',
   cartCount: typeof cartCount !== 'undefined' ? cartCount : 0,

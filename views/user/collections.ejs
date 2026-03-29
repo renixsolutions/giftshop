@@ -41,7 +41,7 @@
 <!-- Two-column shop layout -->
 <div class="shop-layout">
   <aside class="sidebar">
-    <%- include('../partials/filters-panel') %>
+    <%- include('../partials/filters-panel', { currentPage: 'collections' }) %>
   </aside>
 
   <div class="main-content">
@@ -345,12 +345,13 @@
       grid-template-columns: 1fr;
     }
     .sidebar {
-      position: static;
+      position: absolute;
+      width: 0;
       height: 0;
       padding: 0;
       margin: 0;
-      border: none;
       overflow: visible;
+      border: none;
     }
     .page-hero {
       padding: 24px 16px 16px;
@@ -382,82 +383,57 @@
         const csrfToken = '<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>';
         
         function renderProductCard(product) {
-            const qrCodeHtml = product.qr_code ? `
-                <div class="product-qr-code-icon" style="position: absolute; top: 10px; right: 10px; z-index: 10; cursor: pointer; background: rgba(255, 255, 255, 0.9); padding: 8px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);" onclick="openQRCodeModal(${JSON.stringify(product).replace(/"/g, '&quot;')})">
-                    ${product.qr_code_image ? 
-                        `<img src="${product.qr_code_image}" alt="QR Code" style="width: 50px; height: 50px; display: block;">` : 
-                        `<i class="bi bi-qr-code-scan" style="font-size: 2rem; color: var(--veera-accent-dark);"></i>`
-                    }
-                </div>
-            ` : '';
-            
             const saleBadge = product.discount_percentage && product.discount_percentage > 0 ? 
                 '<span class="sale-badge">Sale</span>' : '';
             
             const ratingHtml = product.avgRating && product.avgRating > 0 ? `
-                <div class="product-rating mb-2">
-                    <div class="d-flex align-items-center">
-                        <div class="star-rating me-2">
-                            ${Array.from({length: 5}, (_, i) => 
-                                `<i class="bi bi-star${i < Math.round(product.avgRating) ? '-fill' : ''} text-warning" style="font-size: 0.9rem;"></i>`
-                            ).join('')}
-                        </div>
-                        <span class="rating-text" style="font-size: 0.85rem; color: #666;">
-                            <strong>${product.avgRating}</strong> (${product.totalRatings || 0})
-                        </span>
-                    </div>
+                <div class="pcard-rating">
+                  <div class="stars">
+                    ${Array.from({length: 5}, (_, i) => 
+                        `<span class="star ${i >= Math.round(product.avgRating) ? 'empty' : ''}"></span>`
+                    ).join('')}
+                  </div>
+                  <span>${product.avgRating} (${product.totalRatings || 0})</span>
                 </div>
-            ` : '<div class="product-rating mb-2"><span class="text-muted" style="font-size: 0.85rem;">No ratings yet</span></div>';
+            ` : '<div class="pcard-rating"><span style="font-size:12px;color:var(--muted);">No ratings yet</span></div>';
             
             const originalPriceHtml = product.original_price && product.original_price > product.price ? 
-                `<span class="original-price">Rs. ${parseFloat(product.original_price).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>` : '';
-            
-            const discountBadge = product.discount_percentage && product.discount_percentage > 0 ? 
-                `<span class="discount-badge">${product.discount_percentage}% OFF</span>` : '';
+                `<span class="pcard-old">₹${parseFloat(product.original_price).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>` : '';
             
             const addToCartHtml = product.stock > 0 && userId ? `
-                <form action="/cart/add" method="POST" class="d-inline w-100" id="addToCartForm${product.id}">
+                <form action="/cart/add" method="POST" id="addToCartForm${product.id}">
                     <input type="hidden" name="_csrf" value="${csrfToken}">
                     <input type="hidden" name="productId" value="${product.id}">
                     <input type="hidden" name="quantity" value="1">
-                    <button type="submit" class="btn btn-gradient-modern w-100">
-                        <i class="bi bi-cart-plus"></i> ADD TO CART
-                    </button>
+                    <button type="submit" class="pcard-add" onclick="event.stopPropagation()">+</button>
                 </form>
             ` : product.stock > 0 ? `
-                <button type="button" class="btn btn-gradient-modern w-100 js-open-auth-login"
-                        onclick="if (window.__giftAuthOpen) window.__giftAuthOpen('login');">
-                    <i class="bi bi-box-arrow-in-right"></i> Login to Order
+                <button type="button" class="pcard-add js-open-auth-login"
+                        onclick="event.stopPropagation(); if (window.__giftAuthOpen) window.__giftAuthOpen('login');">
+                    +
                 </button>
-            ` : '<button class="btn btn-secondary w-100" disabled style="padding: 12px; border-radius: 8px;">Out of Stock</button>';
+            ` : '<span style="font-size:12px;color:var(--muted);">Out of stock</span>';
             
             return `
-                <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
-                    <div class="card product-card h-100 shadow-sm">
-                        <div class="product-image-wrapper" style="position: relative;">
-                            ${saleBadge}
-                            ${qrCodeHtml}
-                            <a href="/products/${product.id}">
-                                <img src="${product.image || ''}" class="card-img-top" alt="${product.title}" style="height: 280px; object-fit: cover; width: 100%;" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+Tm8gSW1hZ2UgQXZhaWxhYmxlPC90ZXh0Pjwvc3ZnPg==';"
-                            </a>
-                        </div>
-                        <div class="card-body d-flex flex-column p-3">
-                            <h6 class="card-title mb-2" style="min-height: 45px; font-weight: 600;">${product.title}</h6>
-                            ${ratingHtml}
-                            <div class="price-section mb-3">
-                                ${originalPriceHtml}
-                                <div class="mt-1">
-                                    <span class="current-price">Rs. ${parseFloat(product.price).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                                    ${discountBadge}
-                                </div>
-                            </div>
-                            <div class="mt-auto">
-                                ${product.stock > 0 ? `<a href="/products/${product.id}" class="btn btn-light-modern w-100 mb-2">VIEW DETAILS</a>` : ''}
-                                ${addToCartHtml}
-                            </div>
-                        </div>
-                    </div>
+              <div class="pcard">
+                <div class="pcard-img" style="background:#FBF0E8;">
+                  <a href="/products/${product.id}" style="display:block;width:100%;height:100%;">
+                    <img src="${product.image || ''}" alt="${product.title}" style="width:100%;height:100%;object-fit:cover;border-radius:18px 18px 0 0;" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+Tm8gSW1hZ2UgQXZhaWxhYmxlPC90ZXh0Pjwvc3ZnPg==';">
+                  </a>
                 </div>
+                <div class="pcard-body">
+                  <div class="pcard-meta"><span class="pcard-cat">${product.category || 'Gift Box'}</span></div>
+                  <div class="pcard-name">${product.title}</div>
+                  ${ratingHtml}
+                  <div class="pcard-foot">
+                    <div class="pcard-prices">
+                      <span class="pcard-price">₹${parseFloat(product.price).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+                      ${originalPriceHtml}
+                    </div>
+                    ${addToCartHtml}
+                  </div>
+                </div>
+              </div>
             `;
         }
         
@@ -468,26 +444,11 @@
             document.getElementById('loadingIndicator').style.display = 'block';
             
             try {
-                const params = new URLSearchParams({
-                    limit: limit,
-                    offset: currentOffset,
-                    search: search
-                });
-                // Get categories from URL (can be multiple)
-                const urlParams = new URLSearchParams(window.location.search);
-                const urlCategories = urlParams.getAll('categories');
-                if (urlCategories.length > 0) {
-                    urlCategories.forEach(cat => params.append('categories', cat));
-                } else if (category && category !== 'all') {
-                    // Backward compatibility: single category
-                    params.append('category', category);
-                }
-                if (minPrice) params.append('minPrice', minPrice);
-                if (maxPrice) params.append('maxPrice', maxPrice);
-                if (sortBy) params.append('sortBy', sortBy);
-                if (sortOrder) params.append('sortOrder', sortOrder);
+                const params = new URLSearchParams(window.location.search);
+                params.set('limit', limit);
+                params.set('offset', currentOffset);
                 
-                const response = await fetch(`/api/collections?${params}`);
+                const response = await fetch(\`/api/collections?\${params.toString()}\`);
                 const data = await response.json();
                 
                 if (data.success && data.products.length > 0) {
@@ -514,16 +475,12 @@
             }
         }
         
-        // Scroll event listener
         window.addEventListener('scroll', () => {
-            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 800) {
                 loadMoreProducts();
             }
         });
     })();
-    
-    // Quantity control functions
 </script>
 
 <%- include('../partials/footer-gift') %>
-

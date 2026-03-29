@@ -28,7 +28,16 @@
   --veera-red: #d32f2f;
   --veera-gold: var(--gold);
 }
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+}
 body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--ink);line-height:1.5;font-size:14px;}
+a{text-decoration:none !important;}
+a:hover{text-decoration:none !important;}
 
 /* NAV */
 .nav{background:#fff;border-bottom:1px solid var(--border);height:72px;display:flex;align-items:center;padding:0 48px;gap:40px;position:sticky;top:0;z-index:200;}
@@ -36,7 +45,7 @@ body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--ink);li
 .nav .logo em{font-style:normal;color:var(--accent);}
 .nav-links{display:flex;gap:28px;list-style:none;flex:1;}
 .nav-links li a{text-decoration:none;font-size:13.5px;color:var(--muted);font-weight:400;letter-spacing:0.2px;padding:4px 0;border-bottom:2px solid transparent;transition:all .2s;}
-.nav-links li a:hover,.nav-links li a.hi{color:var(--ink);border-bottom-color:var(--accent);}
+.nav-links li a:hover, .nav-links li a.hi{color:var(--ink); border-bottom-color: var(--accent);}
 .nav-r{display:flex;gap:8px;align-items:center;}
 .nav-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;position:relative;transition:all .2s;text-decoration:none;color:inherit;}
 .nav-btn:hover{background:var(--warm);border-color:var(--border2);}
@@ -191,7 +200,7 @@ body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--ink);li
 .sec-sub{font-size:15px;color:var(--muted);margin-top:8px;font-weight:300;}
 .sec-head-row{display:flex;justify-content:space-between;align-items:flex-end;}
 .see-all{font-size:13px;color:var(--accent);font-weight:500;text-decoration:none;cursor:pointer;border-bottom:1px solid transparent;transition:border-color .2s;}
-.see-all:hover{border-bottom-color:var(--accent);color:var(--accent);}
+.see-all:hover{color:var(--accent);}
 
 .cat-strip{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory;}
 .cat-strip::-webkit-scrollbar{height:6px;}

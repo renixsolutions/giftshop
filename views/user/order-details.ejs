@@ -434,6 +434,13 @@
                 </div>
             </div>
 
+            <% if (order.delivery_date) { %>
+                <div style="margin-top: 24px; padding: 16px; background: rgba(212, 165, 116, 0.08); border-radius: var(--r); border: 1px dashed var(--accent);">
+                    <div style="font-size: 11.5px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px;">Expected Delivery Date</div>
+                    <div style="font-size: 18px; font-weight: 700; color: var(--ink);"><%= new Date(order.delivery_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) %></div>
+                </div>
+            <% } %>
+
             <div style="text-align: center; padding: 14px; margin-top: 16px; background: rgba(46, 125, 79, 0.08); border-radius: var(--r); font-size: 13.5px; font-weight: 600; color: var(--green);">
                 Thank you for shopping with us!
             </div>

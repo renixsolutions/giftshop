@@ -7,6 +7,7 @@ router.get('/', requireAuth, orderController.getUserOrders);
 router.get('/checkout', requireAuth, orderController.showCheckout);
 router.get('/:id', requireAuth, orderController.getOrderDetails);
 router.post('/checkout', requireAuth, orderController.createOrder);
+router.post('/verify-payment', requireAuth, orderController.verifyPayment);
 
 module.exports = router;
 

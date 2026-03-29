@@ -1,5 +1,7 @@
 const db = require('../../config/database');
 const { setFlash } = require('../../libs/helpers');
+const razorpay = require('../../config/razorpay');
+const crypto = require('crypto');
 
 // Show checkout page (cart items include products and hampers)
 const showCheckout = async (req, res) => {
@@ -54,7 +56,8 @@ const showCheckout = async (req, res) => {
       deliveryCharge,
       grandTotal,
       userName: user ? user.name : '',
-      userId
+      userId,
+      razorpayKeyId: process.env.RAZORPAY_KEY_ID
     });
   } catch (error) {
     console.error('Show checkout error:', error);
@@ -153,13 +156,57 @@ const createOrder = async (req, res) => {
           unit_price: item.price,
           item_type: 'product'
         });
-        await db('products').where({ id: item.product_id }).decrement('stock', item.quantity);
       }
     }
     
-    // Clear cart
-    await db('cart').where({ user_id: userId }).del();
+    // NOTE: We no longer clear the cart or decrement stock here.
+    // This will happen ONLY after successful payment verification.
+    // This allows the user to retain their cart if they cancel the payment.
     
+    // If online payment, return JSON for frontend to trigger Razorpay
+    if (payMode === 'full_online' || payMode === 'partial_cod') {
+      const amountToPay = payMode === 'full_online' ? orderTotal : advancedPaid;
+      
+      const r_order = await razorpay.orders.create({
+        amount: Math.round(amountToPay * 100), // in paise
+        currency: 'INR',
+        receipt: `receipt_${order.id}`
+      });
+      
+      await db('orders').where({ id: order.id }).update({
+        razorpay_order_id: r_order.id,
+        status: 'pending_payment'
+      });
+      
+      // If it's an AJAX request, return JSON
+      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.json({
+          success: true,
+          status: 'online_payment',
+          order_id: order.id,
+          razorpay_order: r_order,
+          user: {
+             name: customer_name,
+             phone: customer_phone,
+             email: req.session.userEmail || ''
+          }
+        });
+      } else {
+         // If it's a regular form post, we need to handle it on a separate page
+         return res.render('user/razorpay-checkout', {
+            title: 'Complete Payment',
+            order_id: order.id,
+            razorpay_order: r_order,
+            razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+            user: {
+                 name: customer_name,
+                 phone: customer_phone,
+                 email: req.session.userEmail || ''
+            }
+         });
+      }
+    }
+
     setFlash(req, 'success', 'Order placed successfully!');
     res.redirect(`/orders/${order.id}`);
   } catch (error) {
@@ -243,6 +290,7 @@ const getUserOrders = async (req, res) => {
     
     const orders = await db('orders')
       .where({ user_id: userId })
+      .whereNot({ status: 'pending_payment' })
       .orderBy('created_at', 'desc');
     
     res.render('user/orders', {
@@ -337,7 +385,10 @@ const adminUpdateOrderStatus = async (req, res) => {
       return res.redirect('/admin/orders');
     }
     
-    await db('orders').where({ id }).update({ status });
+    await db('orders').where({ id }).update({ 
+      status,
+      delivery_date: req.body.delivery_date || null
+    });
     
     setFlash(req, 'success', 'Order status updated!');
     res.redirect('/admin/orders');
@@ -401,6 +452,52 @@ const addReview = async (req, res) => {
   }
 };
 
+const verifyPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, order_id } = req.body;
+    
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const razorpaySecret = (process.env.RAZORPAY_KEY_SECRET || '').replace(/\s+/g, '').trim();
+    const expectedSignature = crypto
+      .createHmac("sha256", razorpaySecret)
+      .update(body.toString())
+      .digest("hex");
+      
+    if (expectedSignature === razorpay_signature) {
+      // Payment successful
+      await db('orders').where({ id: order_id }).update({
+        razorpay_payment_id,
+        razorpay_signature,
+        status: 'processing'
+      });
+
+      // Now decrement stock and clear cart since payment is verified
+      const orderItems = await db('order_items').where({ order_id });
+      for (const item of orderItems) {
+        if (item.product_id && item.item_type === 'product') {
+          await db('products').where({ id: item.product_id }).decrement('stock', item.quantity);
+        }
+      }
+
+      // Get user_id from order to clear their cart
+      const orderRecord = await db('orders').where({ id: order_id }).first();
+      if (orderRecord) {
+        await db('cart').where({ user_id: orderRecord.user_id }).del();
+      }
+      
+      setFlash(req, 'success', 'Payment successful! Order placed.');
+      return res.json({ success: true, redirect_url: `/orders/${order_id}` });
+    } else {
+      // Signature mismatch
+      setFlash(req, 'error', 'Payment verification failed.');
+      return res.json({ success: false, message: 'Invalid signature' });
+    }
+  } catch (error) {
+    console.error('Verify payment error:', error);
+    res.status(500).json({ success: false, message: 'Server error during verification' });
+  }
+};
+
 module.exports = {
   showCheckout,
   createOrder,
@@ -409,6 +506,7 @@ module.exports = {
   adminListOrders,
   adminGetOrderDetails,
   adminUpdateOrderStatus,
-  addReview
+  addReview,
+  verifyPayment
 };
 

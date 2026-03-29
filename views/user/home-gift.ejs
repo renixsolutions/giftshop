@@ -1,4 +1,7 @@
-<%- include('../partials/header-gift') %>
+<%- include('../partials/header-gift', { 
+    title: 'Curated By Aissh | Premium Gifts, Hampers & Gift Boxes Online in India',
+    metaDescription: 'Discover luxury curated gift boxes and personalized hampers at Curated By Aissh. Perfect for birthdays, anniversaries, wedding gifts and corporate events.'
+}) %>
 <%- include('../partials/navbar-gift', { currentPage: 'home', cartCount: typeof cartCount !== 'undefined' ? cartCount : 0, userId: typeof userId !== 'undefined' ? userId : null }) %>
 
 <div class="hero">
