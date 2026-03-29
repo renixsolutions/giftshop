@@ -69,7 +69,7 @@ async function getBuildPage(req, res) {
     // Products that can go inside a hamper (is_hamper_item = true)
     const hamperProducts = await db('products')
       .where({ is_hamper_item: true })
-      .select('id', 'title', 'price', 'category', 'category_id', 'is_personalized', 'personalization_type', 'image');
+      .select('id', 'title', 'price', 'category', 'category_id', 'is_personalized', 'personalization_type', 'image', 'description');
 
     // Group by category name (use category string or category_id join)
     const byCategory = {};

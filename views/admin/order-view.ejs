@@ -1,0 +1,191 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout">
+    <%- include('../partials/admin-sidebar', { currentPage: 'orders' }) %>
+    
+    <div class="admin-main">
+        <%- include('../partials/admin-header', { pageTitle: 'View Order' }) %>
+        
+        <div class="admin-content">
+            <% if (typeof flash !== 'undefined' && flash) { %>
+                <div class="alert alert-<%= flash.type === 'error' ? 'danger' : 'success' %> alert-dismissible fade show" role="alert">
+                    <%= flash.message %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <% } %>
+            
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+                <h2 class="mb-0 fw-bold" style="font-family: 'Playfair Display', serif;">Order #<%= order.id %></h2>
+                <div class="btn-group flex-wrap" role="group">
+                    <a href="/admin/orders" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Orders
+                    </a>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Order Items -->
+                    <div class="admin-card mb-4" style="border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                        <h5 class="mb-4 fw-bold" style="font-family: 'Playfair Display', serif;">Order Items</h5>
+                        
+                        <% if (orderItems && orderItems.length > 0) { %>
+                            <div class="table-responsive">
+                                <table class="table align-middle table-hover border-top">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Price</th>
+                                            <th>Qty</th>
+                                            <th class="text-end">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% orderItems.forEach(item => { %>
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <div style="width: 64px; height: 64px; border-radius: 8px; background: #faf9f7; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                                            <% if (item.item_type === 'hamper') { %>
+                                                                <i class="bi bi-gift" style="font-size: 24px; color: #8A7060;"></i>
+                                                            <% } else { %>
+                                                                <img src="<%= item.image || '' %>" alt="<%= item.title %>" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+Tm8gSW1hZ2UgQXZhaWxhYmxlPC90ZXh0Pjwvc3ZnPg==';">
+                                                            <% } %>
+                                                        </div>
+                                                        <div>
+                                                            <strong style="font-size: 15px; color: #1C1008;"><%= item.item_type === 'hamper' ? 'Custom Hamper Box' : item.title %></strong>
+                                                            <% if (item.category) { %>
+                                                                <br><small class="text-muted" style="font-size: 12px;"><%= item.category %></small>
+                                                            <% } %>
+                                                            <% if (item.item_type === 'hamper' && item.hamper_data) { %>
+                                                                <br><a href="#" class="text-primary text-decoration-none" style="font-size: 12px;" onclick="alert('Hamper Items:\n' + JSON.stringify(JSON.parse('<%= item.hamper_data %>').items, null, 2)); return false;">View Hamper Contents</a>
+                                                            <% } %>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>₹<%= Number(item.unit_price).toLocaleString('en-IN', {minimumFractionDigits: 2}) %></td>
+                                                <td><strong><%= item.quantity %></strong></td>
+                                                <td class="text-end fw-bold" style="color: #C4622D;">₹<%= (Number(item.unit_price) * Number(item.quantity)).toLocaleString('en-IN', {minimumFractionDigits: 2}) %></td>
+                                            </tr>
+                                        <% }); %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <% } else { %>
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-0">No items found in this order.</p>
+                            </div>
+                        <% } %>
+                    </div>
+                    
+                    <!-- Customer Information -->
+                    <div class="admin-card mb-4 border-0" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                        <h5 class="mb-4 fw-bold" style="font-family: 'Playfair Display', serif;">Customer & Delivery</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-4 mb-md-0">
+                                <h6 class="text-muted mb-3" style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Customer Info</h6>
+                                <div class="d-flex align-items-center mb-2">
+                                    <div style="width: 36px; height: 36px; border-radius: 50%; background: #e9ecef; color: #495057; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px;">
+                                        <%= order.user_name ? order.user_name.charAt(0).toUpperCase() : 'U' %>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold" style="font-size: 15px;"><%= order.user_name %></div>
+                                        <div class="text-muted" style="font-size: 13px;"><%= order.user_email %></div>
+                                    </div>
+                                </div>
+                                <% if (order.customer_phone) { %>
+                                <div class="mt-3 text-dark" style="font-size: 14px;">
+                                    <i class="bi bi-telephone text-muted me-2"></i> <%= order.customer_phone %>
+                                </div>
+                                <% } %>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3" style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Shipping Address</h6>
+                                <div class="bg-light p-3 rounded" style="font-size: 14px; line-height: 1.6;">
+                                    <strong class="d-block mb-1"><%= order.customer_name || order.user_name %></strong>
+                                    <% if (order.shipping_address) { %>
+                                        <%= order.shipping_address %><br>
+                                        <%= order.city || '' %><%= order.city && order.state ? ', ' : '' %><%= order.state || '' %>
+                                        <% if (order.pincode) { %> - <strong><%= order.pincode %></strong><% } %>
+                                    <% } else { %>
+                                        <span class="text-muted fst-italic">No address provided</span>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <!-- Order Summary -->
+                    <div class="admin-card mb-4 border-0" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                        <h5 class="mb-4 fw-bold" style="font-family: 'Playfair Display', serif;">Order Summary</h5>
+                        
+                        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                            <span class="text-muted">Order Date</span>
+                            <span class="fw-medium"><%= new Date(order.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                            <span class="text-muted">Payment Mode</span>
+                            <span class="fw-medium text-uppercase"><%= order.payment_mode || 'COD' %></span>
+                        </div>
+                        <% if (order.delivery_date) { %>
+                        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                            <span class="text-muted">Req. Delivery</span>
+                            <span class="fw-medium text-primary"><%= new Date(order.delivery_date).toLocaleDateString() %></span>
+                        </div>
+                        <% } %>
+                        <div class="d-flex justify-content-between mb-4 mt-3">
+                            <span class="fw-bold" style="font-size: 16px;">Grand Total</span>
+                            <span class="fw-bold" style="font-size: 20px; color: #C4622D;">₹<%= Number(order.total_amount).toLocaleString('en-IN', {minimumFractionDigits: 2}) %></span>
+                        </div>
+                        
+                        <h6 class="text-muted mb-3 mt-4" style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Order Status</h6>
+                        <form action="/admin/orders/<%= order.id %>/status" method="POST">
+                            <%- include('../partials/csrf-token') %>
+                            <div class="d-flex gap-2 mb-2">
+                                <select name="status" class="form-select bg-light" style="font-weight: 500;" required>
+                                    <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>⏱ Pending</option>
+                                    <option value="processing" <%= order.status === 'processing' ? 'selected' : '' %>>⚙️ Processing (Placed)</option>
+                                    <option value="shipped" <%= order.status === 'shipped' ? 'selected' : '' %>>🚚 Shipped</option>
+                                    <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>✅ Delivered</option>
+                                    <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>❌ Cancelled</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary px-3">Update</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <% if (order.gift_note) { %>
+                    <div class="admin-card border-0" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); background-color: #fdfaf6; border-left: 4px solid #C4622D !important;">
+                        <h6 class="mb-2 fw-bold" style="color: #C4622D;"><i class="bi bi-envelope-heart me-2"></i> Gift Message</h6>
+                        <p class="mb-0 fst-italic" style="color: #1C1008; font-size: 14px; line-height: 1.6;"><%= order.gift_note %></p>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.js"></script>
+<script>
+    // Sidebar toggle
+    document.getElementById('mobileSidebarToggle')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
+    });
+    
+    document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('sidebarOverlay').classList.remove('active');
+    });
+    
+    document.getElementById('sidebarOverlay')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.remove('active');
+        this.classList.remove('active');
+    });
+</script>
+</body>
+</html>

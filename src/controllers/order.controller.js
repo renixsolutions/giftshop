@@ -287,6 +287,44 @@ const adminListOrders = async (req, res) => {
   }
 };
 
+// Admin: Get specific order details
+const adminGetOrderDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const order = await db('orders')
+      .join('users', 'orders.user_id', 'users.id')
+      .where('orders.id', id)
+      .select('orders.*', 'users.name as user_name', 'users.email as user_email')
+      .first();
+      
+    if (!order) {
+      setFlash(req, 'error', 'Order not found');
+      return res.redirect('/admin/orders');
+    }
+    
+    const orderItems = await db('order_items')
+      .where({ order_id: id })
+      .leftJoin('products', 'order_items.product_id', 'products.id')
+      .select(
+        'order_items.*',
+        'products.title',
+        'products.image',
+        'products.category'
+      );
+    
+    res.render('admin/order-view', {
+      title: `Order #${order.id} Details`,
+      order,
+      orderItems
+    });
+  } catch (error) {
+    console.error('Admin get order details error:', error);
+    setFlash(req, 'error', 'Error loading order details');
+    res.redirect('/admin/orders');
+  }
+};
+
 // Admin: Update order status
 const adminUpdateOrderStatus = async (req, res) => {
   try {
@@ -369,6 +407,7 @@ module.exports = {
   getOrderDetails,
   getUserOrders,
   adminListOrders,
+  adminGetOrderDetails,
   adminUpdateOrderStatus,
   addReview
 };
