@@ -57,6 +57,8 @@ app.use(async (req, res, next) => {
     res.locals.cartCount = 0;
   }
   
+  res.locals.currentPath = req.path;
+  
   next();
 });
 
@@ -67,6 +69,12 @@ app.use('/products', require('./src/routes/product.routes'));
 app.use('/cart', require('./src/routes/cart.routes'));
 app.use('/orders', require('./src/routes/order.routes'));
 app.use('/', require('./src/routes/user.routes'));
+
+// Sitemap.xml
+app.get('/sitemap.xml', async (req, res) => {
+  const userController = require('./src/controllers/user.controller');
+  await userController.generateSitemap(req, res);
+});
 
 // Home route
 app.get('/', async (req, res) => {

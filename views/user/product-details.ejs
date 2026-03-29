@@ -83,7 +83,7 @@
                             class="pd-thumb"
                             onclick="(function(){ var v=document.querySelector('.pd-video-preview'); var imgEl=document.querySelector('.pd-image'); if(v){ v.style.display='none'; } if(imgEl){ imgEl.src='<%= img.image_url %>'; imgEl.style.display='block'; } })()"
                         >
-                            <img src="<%= img.image_url %>" alt="" onerror="this.style.display='none'">
+                            <img src="<%= img.image_url %>" alt="<%= product.title %>" onerror="this.style.display='none'">
                         </button>
                     <% }); %>
                 <% } %>
