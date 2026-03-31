@@ -57,6 +57,10 @@ router.post('/orders/:id/status', requireAdmin, orderController.adminUpdateOrder
 router.get('/leads', requireAdmin, adminController.corporateLeadsList);
 router.post('/leads/:id/status', requireAdmin, csrfMiddleware, adminController.corporateLeadUpdateStatus);
 
+// Store Settings
+router.get('/settings', requireAdmin, adminController.getSettings);
+router.post('/settings', requireAdmin, csrfMiddleware, adminController.updateSettings);
+
 // Category routes
 router.get('/categories', requireAdmin, categoryController.adminListCategories);
 router.get('/categories/new', requireAdmin, categoryController.adminShowCategoryForm);
