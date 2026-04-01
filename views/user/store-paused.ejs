@@ -1,0 +1,18 @@
+<%- include('../partials/header-gift', { 
+    title: 'Store Paused - Curated By Aissh',
+    metaDescription: 'We are currently not taking orders.'
+}) %>
+<%- include('../partials/navbar-gift', { currentPage: 'home' }) %>
+
+<div style="min-height: 70vh; display: flex; align-items: center; justify-content: center; background: #fffaf7; padding: 40px 20px;">
+    <div style="max-width: 600px; text-align: center; background: white; padding: 50px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+        <div style="font-size: 64px; margin-bottom: 20px;">📦</div>
+        <h1 style="color: var(--brown); font-family: 'Playfair Display', serif; margin-bottom: 20px;">Store Temporarily Closed</h1>
+        <p style="font-size: 18px; line-height: 1.6; color: #555; margin-bottom: 30px;">
+            <%= message %>
+        </p>
+        <a href="/" class="btn-solid" style="display: inline-block;">Return to Homepage</a>
+    </div>
+</div>
+
+<%- include('../partials/footer-gift') %>

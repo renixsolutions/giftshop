@@ -208,12 +208,74 @@ const corporateLeadUpdateStatus = async (req, res) => {
   res.redirect('/admin/leads');
 };
 
+// Store Settings
+const getSettings = async (req, res) => {
+  try {
+    const settingObj = await db('store_settings').where({ key: 'pause_orders' }).first();
+    let pauseSettings = {
+      enabled: false,
+      startDate: null,
+      endDate: null,
+      message: 'Sorry, we are currently facing high demand bulk orders so at the moment we are not taking any orders.'
+    };
+    if (settingObj && settingObj.value) {
+      pauseSettings = JSON.parse(settingObj.value);
+    }
+    
+    // Format dates for input type="datetime-local" if they exist
+    if (pauseSettings.startDate) {
+      pauseSettings.startDateLocal = new Date(pauseSettings.startDate).toISOString().slice(0, 16);
+    }
+    if (pauseSettings.endDate) {
+      pauseSettings.endDateLocal = new Date(pauseSettings.endDate).toISOString().slice(0, 16);
+    }
+    
+    res.render('admin/store-settings', {
+      title: 'Store Settings',
+      pauseSettings
+    });
+  } catch (error) {
+    console.error('Get settings error:', error);
+    setFlash(req, 'error', 'Error loading settings');
+    res.redirect('/admin/dashboard');
+  }
+};
+
+const updateSettings = async (req, res) => {
+  try {
+    const { enabled, startDate, endDate, message } = req.body;
+    
+    const pauseSettings = {
+      enabled: enabled === 'on',
+      startDate: startDate ? new Date(startDate).toISOString() : null,
+      endDate: endDate ? new Date(endDate).toISOString() : null,
+      message: message || 'Sorry, we are currently facing high demand bulk orders so at the moment we are not taking any orders.'
+    };
+    
+    await db('store_settings')
+      .where({ key: 'pause_orders' })
+      .update({
+        value: JSON.stringify(pauseSettings),
+        updated_at: new Date()
+      });
+      
+    setFlash(req, 'success', 'Store settings updated successfully');
+    res.redirect('/admin/settings');
+  } catch (error) {
+    console.error('Update settings error:', error);
+    setFlash(req, 'error', 'Error updating settings');
+    res.redirect('/admin/settings');
+  }
+};
+
 module.exports = {
   login,
   logout,
   dashboard,
   showLogin,
   corporateLeadsList,
-  corporateLeadUpdateStatus
+  corporateLeadUpdateStatus,
+  getSettings,
+  updateSettings
 };
 

@@ -102,11 +102,11 @@ app.get('/occasions', async (req, res) => {
 });
 
 // Build a Hamper (GiftHouse)
-app.get('/build-hamper', async (req, res) => {
+app.get('/build-hamper', require('./src/middlewares/storeSettings').checkStoreStatus, async (req, res) => {
   const hamperController = require('./src/controllers/hamper.controller');
   await hamperController.getBuildPage(req, res);
 });
-app.post('/api/hampers', async (req, res) => {
+app.post('/api/hampers', require('./src/middlewares/storeSettings').checkStoreStatus, async (req, res) => {
   const hamperController = require('./src/controllers/hamper.controller');
   await hamperController.addHamperToCart(req, res);
 });
